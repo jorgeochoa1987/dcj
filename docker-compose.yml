@@ -1,0 +1,43 @@
+# Despliegue en Coolify: New Resource → este repositorio → Build Pack "Docker Compose".
+# Coolify genera solo las variables SERVICE_* (usuario, contraseñas y dominio).
+services:
+  wordpress:
+    build: .
+    restart: unless-stopped
+    environment:
+      - SERVICE_FQDN_WORDPRESS_80
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_NAME=wordpress
+      - WORDPRESS_DB_USER=${SERVICE_USER_WORDPRESS}
+      - WORDPRESS_DB_PASSWORD=${SERVICE_PASSWORD_WORDPRESS}
+      - WORDPRESS_CONFIG_EXTRA=define('WP_POST_REVISIONS', 10); define('DISALLOW_FILE_EDIT', true);
+    volumes:
+      - wordpress-files:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-o", "/dev/null", "http://127.0.0.1/wp-login.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=wordpress
+      - MARIADB_USER=${SERVICE_USER_WORDPRESS}
+      - MARIADB_PASSWORD=${SERVICE_PASSWORD_WORDPRESS}
+      - MARIADB_ROOT_PASSWORD=${SERVICE_PASSWORD_ROOT}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  wordpress-files:
+  mariadb-data:

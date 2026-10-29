@@ -1,0 +1,14 @@
+# Solo para probar en tu computador: da valores a las variables que en Coolify se generan solas.
+services:
+  wordpress:
+    ports:
+      - "8080:80"
+    environment:
+      - WORDPRESS_DB_USER=wp
+      - WORDPRESS_DB_PASSWORD=wp
+      - WORDPRESS_DEBUG=1
+  db:
+    environment:
+      - MARIADB_USER=wp
+      - MARIADB_PASSWORD=wp
+      - MARIADB_ROOT_PASSWORD=root

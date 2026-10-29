@@ -1,0 +1,126 @@
+<?php
+/**
+ * Piezas reutilizables de las plantillas.
+ *
+ * @package devconjorge
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Imprime un icono (markup estático propio del tema).
+ *
+ * @param string $clave Icono.
+ * @param int    $size  Tamaño.
+ */
+function dcj_el_icono( $clave, $size = 22 ) {
+	echo dcj_icono( $clave, $size ); // phpcs:ignore WordPress.Security.EscapeOutput -- SVG fijo del tema.
+}
+
+/**
+ * Tablero split-flap: una celda por letra (máximo 6, regla de marca).
+ *
+ * @param string $palabra Palabra.
+ * @param string $tamano  sm | xl.
+ * @param int    $lima    Índice de la celda rellena de lima (-1 ninguna).
+ */
+function dcj_flap( $palabra, $tamano = 'sm', $lima = -1 ) {
+	$letras = mb_str_split( mb_substr( mb_strtoupper( $palabra, 'UTF-8' ), 0, 6 ) );
+	printf( '<span class="flaps flaps--%s" role="img" aria-label="%s">', esc_attr( $tamano ), esc_attr( $palabra ) );
+	foreach ( $letras as $i => $letra ) {
+		printf(
+			'<span class="flap%s" style="--i:%d" aria-hidden="true">%s</span>',
+			$i === $lima ? ' flap--lima' : '',
+			(int) $i,
+			esc_html( $letra )
+		);
+	}
+	echo '</span>';
+}
+
+/**
+ * Firma de autor del tema.
+ *
+ * @return string
+ */
+function dcj_firma() {
+	return (string) get_theme_mod( 'dcj_firma', 'Ing. Jorge Ochoa' );
+}
+
+/**
+ * ID de YouTube asociado a un artículo (lo guarda el plugin de bitácora).
+ *
+ * @param int|null $post_id Post.
+ * @return string
+ */
+function dcj_video_de_post( $post_id = null ) {
+	$id = (string) get_post_meta( $post_id ? $post_id : get_the_ID(), '_dcj_video_id', true );
+	return preg_match( '/^[A-Za-z0-9_-]{6,20}$/', $id ) ? $id : '';
+}
+
+/**
+ * Minutos de lectura.
+ *
+ * @param int|null $post_id Post.
+ * @return int
+ */
+function dcj_minutos_lectura( $post_id = null ) {
+	$palabras = str_word_count( wp_strip_all_tags( get_post_field( 'post_content', $post_id ? $post_id : get_the_ID() ) ) );
+	return max( 1, (int) round( $palabras / 220 ) );
+}
+
+/**
+ * Etiqueta corta (primera categoría que no sea "Sin categoría").
+ *
+ * @return string
+ */
+function dcj_etiqueta() {
+	foreach ( (array) get_the_category() as $cat ) {
+		if ( 'uncategorized' !== $cat->slug && 'sin-categoria' !== $cat->slug ) {
+			return $cat->name;
+		}
+	}
+	return 'Bitácora';
+}
+
+/**
+ * Miniatura vertical del artículo: la imagen destacada o la del video.
+ *
+ * @param string $hook Texto de respaldo.
+ */
+function dcj_poster_post( $hook = '' ) {
+	$video = dcj_video_de_post();
+	if ( has_post_thumbnail() ) {
+		the_post_thumbnail( 'dcj-vertical', array( 'class' => 'poster__img', 'loading' => 'lazy' ) );
+	} elseif ( $video ) {
+		printf(
+			'<img class="poster__img" src="%1$s" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'%2$s\'">',
+			esc_url( dcj_miniatura( $video ) ),
+			esc_url( dcj_miniatura( $video, 'hqdefault' ) )
+		);
+	} else {
+		printf( '<span class="poster__hook">%s</span>', esc_html( $hook ? $hook : mb_strtoupper( get_the_title(), 'UTF-8' ) ) );
+	}
+}
+
+/**
+ * Tarjeta de artículo de la bitácora.
+ */
+function dcj_tarjeta_post() {
+	?>
+	<a class="post-card glass tilt reveal" href="<?php the_permalink(); ?>">
+		<span class="poster">
+			<?php dcj_poster_post(); ?>
+			<?php if ( dcj_video_de_post() ) : ?>
+				<span class="poster__play" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+			<?php endif; ?>
+		</span>
+		<span class="post-card__body">
+			<span class="eyebrow"><?php echo esc_html( dcj_etiqueta() ); ?></span>
+			<span class="post-card__title"><?php the_title(); ?></span>
+			<span class="post-card__excerpt"><?php echo esc_html( wp_strip_all_tags( get_the_excerpt() ) ); ?></span>
+			<span class="meta"><?php echo esc_html( mb_strtoupper( dcj_firma() . ' · ' . get_the_date( 'j M Y' ), 'UTF-8' ) ); ?></span>
+		</span>
+	</a>
+	<?php
+}

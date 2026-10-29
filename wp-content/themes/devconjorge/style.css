@@ -1,0 +1,14 @@
+/*
+Theme Name: DevConJorge
+Theme URI: https://devconjorge.com
+Author: Ing. Jorge Ochoa
+Author URI: https://devconjorge.com
+Description: Tema "terminal líquida" de @devconjorge. Home con contador de seguidores, feed de Shorts tipo app y bitácora que se llena con cada video.
+Version: 1.0.0
+Requires at least: 6.4
+Requires PHP: 8.1
+License: GPL-2.0-or-later
+Text Domain: devconjorge
+*/
+
+/* Los estilos viven en assets/css/main.css */
