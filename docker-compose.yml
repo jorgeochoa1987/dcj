@@ -38,6 +38,18 @@ services:
       timeout: 5s
       retries: 10
 
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - SERVICE_FQDN_PHPMYADMIN_80
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - UPLOAD_LIMIT=64M
+
 volumes:
   wordpress-files:
   mariadb-data:

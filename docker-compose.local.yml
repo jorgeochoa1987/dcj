@@ -12,3 +12,6 @@ services:
       - MARIADB_USER=wp
       - MARIADB_PASSWORD=wp
       - MARIADB_ROOT_PASSWORD=root
+  phpmyadmin:
+    ports:
+      - "127.0.0.1:8081:80"
