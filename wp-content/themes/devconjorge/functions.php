@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DCJ_VERSION', '1.0.0' );
+define( 'DCJ_VERSION', '1.1.0' );
 define( 'DCJ_DIR', get_template_directory() );
 define( 'DCJ_URI', get_template_directory_uri() );
 
@@ -132,3 +132,19 @@ function dcj_excerpt_more() {
 	return '…';
 }
 add_filter( 'excerpt_more', 'dcj_excerpt_more' );
+
+/**
+ * En la página de inicio, la foto se pone desde el editor, no con un ID.
+ *
+ * @param WP_Post $post Entrada en edición.
+ */
+function dcj_ayuda_fotos( $post ) {
+	if ( ! $post instanceof WP_Post || 'page' !== $post->post_type ) {
+		return;
+	}
+	if ( (int) get_option( 'page_on_front' ) !== (int) $post->ID ) {
+		return;
+	}
+	echo '<p class="description" style="margin:12px 0 0">Retrato: imagen destacada, en el panel de la derecha. Fotos extra: bloques de imagen aquí abajo. Se ven solos en la home.</p>';
+}
+add_action( 'edit_form_after_title', 'dcj_ayuda_fotos' );

@@ -74,6 +74,29 @@
 		counts.forEach(function (el) { pintar(el, 0); co.observe(el); });
 	}
 
+	/* ---------- WhatsApp se pega al lado al pasar la comunidad ---------- */
+	var pegado = document.querySelector('[data-wa-pegado]');
+	var comunidad = document.getElementById('comunidad');
+	var pie = document.querySelector('.footer');
+	if (pegado && comunidad && 'IntersectionObserver' in window) {
+		var pasado = false;
+		var enPie = false;
+		function pintarWa() {
+			pegado.classList.toggle('is-on', pasado && !enPie);
+		}
+		new IntersectionObserver(function (entries) {
+			var e = entries[0];
+			pasado = !e.isIntersecting && e.boundingClientRect.top < 0;
+			pintarWa();
+		}, { threshold: 0 }).observe(comunidad);
+		if (pie) {
+			new IntersectionObserver(function (entries) {
+				enPie = entries[0].isIntersecting;
+				pintarWa();
+			}, { threshold: 0 }).observe(pie);
+		}
+	}
+
 	/* ---------- Míralo en 60 s: la app ---------- */
 	var app = document.querySelector('[data-reels]');
 	if (!app) { return; }

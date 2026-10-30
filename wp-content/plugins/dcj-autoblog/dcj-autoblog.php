@@ -91,7 +91,7 @@ function dcjab_revisar( $forzar_todos = false ) {
 
 	// Del más viejo al más nuevo, para que las fechas queden en orden.
 	foreach ( array_reverse( $videos ) as $v ) {
-		if ( ! $forzar_todos && $v['fecha'] < (int) $o['desde'] ) {
+		if ( ! $forzar_todos && $v['fecha'] && $v['fecha'] < (int) $o['desde'] ) {
 			++$res['saltados'];
 			continue;
 		}
@@ -108,7 +108,8 @@ function dcjab_revisar( $forzar_todos = false ) {
 	}
 
 	delete_transient( 'dcjab_lock' );
-	delete_transient( 'dcj_yt_feed' ); // Refresca el feed del tema.
+	delete_transient( 'dcj_yt_feed' );
+	delete_transient( 'dcj_yt_feed_v2' );
 	update_option( 'dcj_autoblog_ultimo', array( 'fecha' => time(), 'res' => $res ), false );
 	return $res;
 }
@@ -124,10 +125,16 @@ function dcjab_leer_feed( $canal_id ) {
 		'https://www.youtube.com/feeds/videos.xml?channel_id=' . rawurlencode( $canal_id ),
 		array( 'timeout' => 10 )
 	);
-	if ( is_wp_error( $resp ) ) {
-		return $resp;
-	}
-	if ( 200 !== wp_remote_retrieve_response_code( $resp ) ) {
+	if ( is_wp_error( $resp ) || 200 !== wp_remote_retrieve_response_code( $resp ) ) {
+		if ( function_exists( 'dcj_videos_desde_shorts' ) ) {
+			$shorts = dcj_videos_desde_shorts();
+			if ( $shorts ) {
+				return $shorts;
+			}
+		}
+		if ( is_wp_error( $resp ) ) {
+			return $resp;
+		}
 		return new WP_Error( 'dcjab_feed', 'YouTube respondió ' . wp_remote_retrieve_response_code( $resp ) . ' al pedir el feed.' );
 	}
 
@@ -239,7 +246,7 @@ function dcjab_crear_post( $v, $o ) {
 			'post_excerpt'  => sanitize_text_field( $extracto ),
 			'post_status'   => in_array( $o['estado'], array( 'draft', 'publish', 'pending' ), true ) ? $o['estado'] : 'draft',
 			'post_author'   => $o['autor'] ? (int) $o['autor'] : dcjab_autor_por_defecto(),
-			'post_date'     => wp_date( 'Y-m-d H:i:s', $v['fecha'] ),
+			'post_date'     => wp_date( 'Y-m-d H:i:s', $v['fecha'] ? (int) $v['fecha'] : time() ),
 			'post_category' => $cats,
 			'meta_input'    => array(
 				'_dcj_video_id'  => $v['id'],

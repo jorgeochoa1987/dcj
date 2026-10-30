@@ -59,20 +59,16 @@ function dcj_youtube_suscriptores() {
  * @return array[] Cada video: id, titulo, hook, fecha (timestamp), descripcion, vistas, url, post_url.
  */
 function dcj_youtube_videos( $total = 8 ) {
-	$videos = get_transient( 'dcj_yt_feed' );
+	$videos = get_transient( 'dcj_yt_feed_v2' );
 
 	if ( false === $videos ) {
-		$videos = array();
-		$resp   = wp_remote_get(
-			'https://www.youtube.com/feeds/videos.xml?channel_id=' . rawurlencode( dcj_canal_id() ),
-			array( 'timeout' => 8 )
-		);
-
-		if ( ! is_wp_error( $resp ) && 200 === wp_remote_retrieve_response_code( $resp ) ) {
-			$videos = dcj_parsear_feed( wp_remote_retrieve_body( $resp ) );
+		$videos = dcj_videos_desde_rss();
+		if ( ! $videos ) {
+			// El RSS del canal responde 404. Los Shorts públicos no piden OAuth ni API key.
+			$videos = dcj_videos_desde_shorts();
 		}
 
-		set_transient( 'dcj_yt_feed', $videos, $videos ? 30 * MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
+		set_transient( 'dcj_yt_feed_v2', $videos, $videos ? 30 * MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
 	}
 
 	$videos = array_slice( $videos, 0, max( 1, (int) $total ) );
@@ -83,6 +79,116 @@ function dcj_youtube_videos( $total = 8 ) {
 	unset( $v );
 
 	return $videos;
+}
+
+/**
+ * Últimos videos por el RSS público. Vacío si YouTube no lo entrega.
+ *
+ * @return array
+ */
+function dcj_videos_desde_rss() {
+	$resp = wp_remote_get(
+		'https://www.youtube.com/feeds/videos.xml?channel_id=' . rawurlencode( dcj_canal_id() ),
+		array(
+			'timeout'    => 10,
+			'user-agent' => 'Mozilla/5.0 (compatible; DevConJorge/1.0; +https://devconjorge.com)',
+		)
+	);
+	if ( is_wp_error( $resp ) || 200 !== wp_remote_retrieve_response_code( $resp ) ) {
+		return array();
+	}
+	return dcj_parsear_feed( wp_remote_retrieve_body( $resp ) );
+}
+
+/**
+ * Handle del canal a partir del enlace guardado en el personalizador.
+ *
+ * @return string
+ */
+function dcj_youtube_handle() {
+	$url = (string) get_theme_mod( 'dcj_youtube_url', 'https://youtube.com/@devconjorge' );
+	if ( preg_match( '~youtube\.com/@([A-Za-z0-9._-]{2,40})~', $url, $m ) ) {
+		return $m[1];
+	}
+	return 'devconjorge';
+}
+
+/**
+ * Shorts públicos de la pestaña /shorts. Sin OAuth y sin API key.
+ *
+ * @return array Misma forma que el RSS: id, titulo, hook, fecha, descripcion, vistas, url.
+ */
+function dcj_videos_desde_shorts() {
+	$resp = wp_remote_get(
+		'https://www.youtube.com/@' . rawurlencode( dcj_youtube_handle() ) . '/shorts',
+		array(
+			'timeout'    => 12,
+			'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+			'headers'    => array( 'Accept-Language' => 'es-CO,es;q=0.9' ),
+		)
+	);
+	if ( is_wp_error( $resp ) || 200 !== wp_remote_retrieve_response_code( $resp ) ) {
+		return array();
+	}
+
+	$cuerpo = wp_remote_retrieve_body( $resp );
+	if ( ! preg_match_all( '/"entityId":"shorts-shelf-item-([A-Za-z0-9_-]{11})","accessibilityText":"((?:\\\\.|[^"\\\\])*)"/', $cuerpo, $hallados, PREG_SET_ORDER ) ) {
+		return array();
+	}
+
+	$videos = array();
+	$vistos = array();
+	foreach ( $hallados as $fila ) {
+		$id = $fila[1];
+		if ( isset( $vistos[ $id ] ) ) {
+			continue;
+		}
+		$vistos[ $id ] = true;
+		$texto         = json_decode( '"' . $fila[2] . '"' );
+		if ( ! is_string( $texto ) ) {
+			$texto = $fila[2];
+		}
+		$vistas = dcj_vistas_de_texto( $texto );
+		$titulo = preg_replace( '/,\s*[\d.,]+\s*(?:mil|mill[oó]n|millones|[kKmM])?\s*vistas?\s*-\s*(?:reproducir|play)\s+Short$/iu', '', $texto );
+		$titulo = dcj_limpiar_titulo( (string) $titulo );
+		if ( '' === $titulo ) {
+			continue;
+		}
+		$videos[] = array(
+			'id'          => $id,
+			'titulo'      => $titulo,
+			'hook'        => dcj_hook( $titulo ),
+			'fecha'       => 0,
+			'descripcion' => '',
+			'vistas'      => $vistas,
+			'url'         => 'https://youtube.com/shorts/' . $id,
+		);
+		if ( count( $videos ) >= 12 ) {
+			break;
+		}
+	}
+	return $videos;
+}
+
+/**
+ * "1,2 mil vistas" o "206 vistas" → entero.
+ *
+ * @param string $texto Texto de accesibilidad del Short.
+ * @return int
+ */
+function dcj_vistas_de_texto( $texto ) {
+	if ( ! preg_match( '/([\d.,]+)\s*(mil|mill[oó]n|millones|[kKmM])?\s*vistas?/iu', $texto, $m ) ) {
+		return 0;
+	}
+	$n = str_replace( '.', '', $m[1] );
+	$n = (float) str_replace( ',', '.', $n );
+	$u = isset( $m[2] ) ? mb_strtolower( $m[2], 'UTF-8' ) : '';
+	if ( false !== mb_strpos( $u, 'mill' ) || 'm' === $u ) {
+		$n *= 1000000;
+	} elseif ( 'mil' === $u || 'k' === $u ) {
+		$n *= 1000;
+	}
+	return (int) round( $n );
 }
 
 /**

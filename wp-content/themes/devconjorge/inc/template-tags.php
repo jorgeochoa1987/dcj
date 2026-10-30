@@ -18,6 +18,45 @@ function dcj_el_icono( $clave, $size = 22 ) {
 }
 
 /**
+ * ID de la foto de Jorge: imagen destacada de Inicio, si no la del personalizador.
+ *
+ * @return int
+ */
+function dcj_id_foto() {
+	$inicio = (int) get_option( 'page_on_front' );
+	$foto   = $inicio ? (int) get_post_thumbnail_id( $inicio ) : 0;
+	if ( $foto ) {
+		return $foto;
+	}
+	return (int) get_theme_mod( 'dcj_foto_id', 0 );
+}
+
+/**
+ * Fotos extra puestas como bloques de imagen en Páginas → Inicio.
+ *
+ * @return int[]
+ */
+function dcj_fotos_editor() {
+	$inicio = (int) get_option( 'page_on_front' );
+	if ( ! $inicio ) {
+		return array();
+	}
+	$html = (string) get_post_field( 'post_content', $inicio );
+	if ( ! preg_match_all( '/wp-image-(\d+)/', $html, $m ) ) {
+		return array();
+	}
+	$portada = dcj_id_foto();
+	$ids     = array();
+	foreach ( $m[1] as $id ) {
+		$id = (int) $id;
+		if ( $id && $id !== $portada && ! in_array( $id, $ids, true ) ) {
+			$ids[] = $id;
+		}
+	}
+	return $ids;
+}
+
+/**
  * Tablero split-flap: una celda por letra (máximo 6, regla de marca).
  *
  * @param string $palabra Palabra.

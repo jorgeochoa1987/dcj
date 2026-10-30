@@ -72,7 +72,7 @@ function dcj_customize_register( $wp_customize ) {
 		array(
 			'title'       => 'Canal de YouTube',
 			'panel'       => 'dcj_panel',
-			'description' => 'El feed "Míralo en 60 s" lee los últimos videos del canal por RSS; no necesita API key. La API key solo sirve para el contador de suscriptores en vivo.',
+			'description' => 'El feed "Míralo en 60 s" lee los Shorts públicos del canal. No usa OAuth. La API key solo sirve para el contador de suscriptores en vivo.',
 		)
 	);
 	$campos = array(
@@ -110,8 +110,6 @@ function dcj_customize_register( $wp_customize ) {
 		'dcj_firma'         => array( 'Firma de autor', 'Ing. Jorge Ochoa', 'sanitize_text_field', 'text' ),
 		'dcj_correo_marcas' => array( 'Correo para marcas', '', 'sanitize_email', 'email' ),
 		'dcj_media_kit_url' => array( 'Enlace al media kit', '', 'esc_url_raw', 'url' ),
-		'dcj_hexfy_url'     => array( 'Enlace a Hexfy', 'https://hexfy.co', 'esc_url_raw', 'url' ),
-		'dcj_foto_id'       => array( 'ID de la foto de Jorge (Medios)', '', 'absint', 'number' ),
 	);
 	foreach ( $campos as $id => $c ) {
 		$wp_customize->add_setting(
@@ -139,5 +137,6 @@ add_action( 'customize_register', 'dcj_customize_register' );
 function dcj_limpiar_cache_youtube() {
 	delete_transient( 'dcj_yt_subs' );
 	delete_transient( 'dcj_yt_feed' );
+	delete_transient( 'dcj_yt_feed_v2' );
 }
 add_action( 'customize_save_after', 'dcj_limpiar_cache_youtube' );

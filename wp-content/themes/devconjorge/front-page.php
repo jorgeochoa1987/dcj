@@ -97,8 +97,8 @@ $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['su
 		<h2 id="comunidad-t" class="h2"><span class="big-count">+<span data-count="<?php echo esc_attr( $dcj_total ); ?>"><?php echo esc_html( number_format_i18n( $dcj_total ) ); ?></span></span> personas aprendiendo IA conmigo.</h2>
 	</div>
 	<ul class="redes-grid">
-		<?php foreach ( $dcj_redes as $dcj_red ) : ?>
-			<li class="red glass tilt reveal red--<?php echo esc_attr( $dcj_red['clave'] ); ?>">
+		<?php $dcj_i = 0; foreach ( $dcj_redes as $dcj_red ) : ?>
+			<li class="red glass tilt reveal red--<?php echo esc_attr( $dcj_red['clave'] ); ?>" style="--i:<?php echo (int) $dcj_i; ?>">
 				<span class="red__top">
 					<span class="red__icon"><?php dcj_el_icono( $dcj_red['clave'], 24 ); ?></span>
 					<span class="red__name"><?php echo esc_html( $dcj_red['nombre'] ); ?></span>
@@ -113,11 +113,16 @@ $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['su
 					<span class="red__num red__num--txt">Nuevo</span>
 					<span class="red__unit"><?php echo esc_html( 'whatsapp' === $dcj_red['clave'] ? 'noticias diarias en tu chat' : $dcj_red['unidad'] ); ?></span>
 				<?php endif; ?>
-				<a class="btn btn--glass btn--block" href="<?php echo esc_url( $dcj_red['url'] ); ?>" rel="me noopener" target="_blank"><?php echo esc_html( $dcj_red['accion'] ); ?> <span class="sr-only">en <?php echo esc_html( $dcj_red['nombre'] ); ?></span></a>
+				<a class="btn btn--glass btn--block" href="<?php echo esc_url( $dcj_red['url'] ); ?>" rel="me noopener" target="_blank" aria-label="<?php echo esc_attr( $dcj_red['accion'] . ' en ' . $dcj_red['nombre'] ); ?>"><?php echo esc_html( $dcj_red['accion'] ); ?></a>
 			</li>
-		<?php endforeach; ?>
+			<?php ++$dcj_i; endforeach; ?>
 	</ul>
 </section>
+
+<a class="wa-pegado" data-wa-pegado href="<?php echo esc_url( $dcj_redes['whatsapp']['url'] ); ?>" rel="noopener" target="_blank">
+	<?php dcj_el_icono( 'whatsapp', 20 ); ?>
+	<span>Únete a WhatsApp</span>
+</a>
 
 <section class="section wrap" aria-labelledby="porque-t">
 	<div class="section__head reveal">
@@ -146,7 +151,25 @@ $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['su
 <section class="hype reveal" aria-label="Cero hype">
 	<p class="eyebrow">LA ÚNICA REGLA DE ESTE CANAL</p>
 	<?php dcj_flap( '0HYPE', 'xl', 0 ); ?>
-	<p class="hype__txt">Si una herramienta no funciona, te lo digo. Si una noticia es humo, no la publico.</p>
+	<p class="hype__txt">Evitemos el humo. Si no se puede abrir, citar o repetir, no va en el video.</p>
+	<ul class="hype-reglas">
+		<li>
+			<span class="eyebrow">PROBARLO</span>
+			<p>Lo abro en mi computador antes de recomendártelo. Si no arranca, no sale.</p>
+		</li>
+		<li>
+			<span class="eyebrow">LA FUENTE</span>
+			<p>Cada dato lleva de dónde salió. Si no la encuentro, ese dato no entra.</p>
+		</li>
+		<li>
+			<span class="eyebrow">EL CÓMO</span>
+			<p>Nada de «esto lo cambia todo» sin el comando, el límite o el precio.</p>
+		</li>
+		<li>
+			<span class="eyebrow">SIN DISFRAZ</span>
+			<p>Si es un anuncio, se nota. Si el producto no sirve, no lo publico.</p>
+		</li>
+	</ul>
 </section>
 
 <?php get_template_part( 'template-parts/reels', null, array( 'videos' => $dcj_videos ) ); ?>
@@ -271,11 +294,11 @@ wp_reset_postdata();
 		<span class="blob blob--lima" aria-hidden="true"></span>
 		<span class="arco glass">
 			<?php
-			$dcj_foto = (int) get_theme_mod( 'dcj_foto_id', 0 );
+			$dcj_foto = dcj_id_foto();
 			if ( $dcj_foto ) {
 				echo wp_get_attachment_image( $dcj_foto, 'large', false, array( 'class' => 'arco__img', 'alt' => dcj_firma() ) );
-			} else {
-				echo '<span class="mono small">Sube tu foto y pon su ID en Personalizar</span>';
+			} elseif ( current_user_can( 'edit_pages' ) ) {
+				echo '<span class="mono small">Páginas → Inicio → imagen destacada</span>';
 			}
 			?>
 		</span>
@@ -284,8 +307,17 @@ wp_reset_postdata();
 		<p class="eyebrow"><?php echo esc_html( mb_strtoupper( dcj_firma(), 'UTF-8' ) ); ?></p>
 		<h2 id="sobre-t" class="h2">Sigo escribiendo código. Por eso lo que explico se sostiene.</h2>
 		<p class="lead">Soy ingeniero y desarrollador full stack con más de 8 años en producción: React, Node.js, APIs, Docker y liderazgo de equipos. Hoy construyo agentes y automatizaciones con IA, y cuento en español lo que aprendo en el camino.</p>
-		<a class="hexfy glass" href="<?php echo esc_url( get_theme_mod( 'dcj_hexfy_url', 'https://hexfy.co' ) ); ?>">¿Quieres automatizar tu negocio con IA? Eso lo hago en <b>Hexfy →</b></a>
 	</div>
+	<?php
+	$dcj_fotos = dcj_fotos_editor();
+	if ( $dcj_fotos ) :
+		?>
+		<ul class="fotos-editor">
+			<?php foreach ( $dcj_fotos as $dcj_fid ) : ?>
+				<li><?php echo wp_get_attachment_image( $dcj_fid, 'large', false, array( 'alt' => dcj_firma() ) ); ?></li>
+			<?php endforeach; ?>
+		</ul>
+	<?php endif; ?>
 </section>
 
 <?php
