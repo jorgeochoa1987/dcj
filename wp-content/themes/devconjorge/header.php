@@ -45,7 +45,31 @@ $dcj_inicio   = home_url( '/' );
 	<span class="orb orb--3 drift"></span>
 </div>
 
+<?php $dcj_audio = dcj_audio_barra(); ?>
 <header class="topbar">
+	<?php if ( $dcj_audio ) : ?>
+	<div class="aire glass" data-aire>
+		<button class="aire__play" type="button" data-aire-play aria-label="Reproducir">
+			<svg class="aire__ico aire__ico--play" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+			<svg class="aire__ico aire__ico--pause" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+		</button>
+		<div class="aire__meta">
+			<p class="aire__kicker">
+				<span class="aire__eq" aria-hidden="true"><span></span><span></span><span></span></span>
+				En el aire
+			</p>
+			<p class="aire__titulo"><?php echo esc_html( $dcj_audio['titulo'] ); ?></p>
+		</div>
+		<div class="aire__pista">
+			<span class="aire__tiempo" data-aire-ahora>0:00</span>
+			<input class="aire__seek" type="range" min="0" max="1000" value="0" step="1" data-aire-seek aria-label="Posición del audio" style="--p:0%">
+			<span class="aire__tiempo" data-aire-total>0:00</span>
+		</div>
+		<audio preload="metadata" data-aire-audio>
+			<source src="<?php echo esc_url( $dcj_audio['url'] ); ?>" type="<?php echo esc_attr( $dcj_audio['mime'] ); ?>">
+		</audio>
+	</div>
+	<?php endif; ?>
 	<nav class="nav glass" aria-label="Principal">
 		<a class="logo<?php echo has_custom_logo() ? ' logo--img' : ''; ?>" href="<?php echo esc_url( $dcj_inicio ); ?>" aria-label="DevConJorge, inicio">
 			<?php

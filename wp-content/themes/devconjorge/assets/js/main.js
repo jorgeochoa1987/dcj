@@ -74,6 +74,58 @@
 		counts.forEach(function (el) { pintar(el, 0); co.observe(el); });
 	}
 
+	/* ---------- Barra de audio ---------- */
+	var aire = document.querySelector('[data-aire]');
+	if (aire) {
+		var audio = aire.querySelector('[data-aire-audio]');
+		var boton = aire.querySelector('[data-aire-play]');
+		var seek = aire.querySelector('[data-aire-seek]');
+		var ahora = aire.querySelector('[data-aire-ahora]');
+		var total = aire.querySelector('[data-aire-total]');
+		var arrastra = false;
+
+		function reloj(seg) {
+			if (!isFinite(seg) || seg < 0) { seg = 0; }
+			var m = Math.floor(seg / 60);
+			var s = Math.floor(seg % 60);
+			return m + ':' + (s < 10 ? '0' : '') + s;
+		}
+		function marcar(valor) {
+			seek.value = String(valor);
+			seek.style.setProperty('--p', (valor / 10) + '%');
+		}
+		audio.addEventListener('loadedmetadata', function () {
+			total.textContent = reloj(audio.duration);
+		});
+		audio.addEventListener('timeupdate', function () {
+			if (arrastra || !audio.duration) { return; }
+			marcar(Math.round((audio.currentTime / audio.duration) * 1000));
+			ahora.textContent = reloj(audio.currentTime);
+		});
+		audio.addEventListener('play', function () {
+			aire.classList.add('is-on');
+			boton.setAttribute('aria-label', 'Pausar');
+		});
+		function parado() {
+			aire.classList.remove('is-on');
+			boton.setAttribute('aria-label', 'Reproducir');
+		}
+		audio.addEventListener('pause', parado);
+		audio.addEventListener('ended', parado);
+		boton.addEventListener('click', function () {
+			if (audio.paused) { audio.play(); } else { audio.pause(); }
+		});
+		seek.addEventListener('input', function () {
+			arrastra = true;
+			marcar(Number(seek.value));
+			if (audio.duration) {
+				audio.currentTime = (Number(seek.value) / 1000) * audio.duration;
+				ahora.textContent = reloj(audio.currentTime);
+			}
+		});
+		seek.addEventListener('change', function () { arrastra = false; });
+	}
+
 	/* ---------- El tablero de 0HYPE pasa por más palabras ---------- */
 	var tablero = document.querySelector('[data-palabras]');
 	if (tablero && !reduce) {

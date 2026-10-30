@@ -156,6 +156,35 @@ function dcj_poster_post( $hook = '' ) {
 }
 
 /**
+ * Audio del encabezado. Sin archivo, la barra no se pinta.
+ *
+ * @return array{url:string,mime:string,titulo:string}|null
+ */
+function dcj_audio_barra() {
+	$id = (int) get_theme_mod( 'dcj_audio_id', 0 );
+	if ( ! $id ) {
+		return null;
+	}
+	$url = wp_get_attachment_url( $id );
+	if ( ! $url ) {
+		return null;
+	}
+	$titulo = trim( (string) get_theme_mod( 'dcj_audio_titulo', '' ) );
+	if ( '' === $titulo ) {
+		$titulo = get_the_title( $id );
+	}
+	if ( '' === trim( (string) $titulo ) ) {
+		$titulo = 'Episodio';
+	}
+	$mime = get_post_mime_type( $id );
+	return array(
+		'url'    => $url,
+		'mime'   => $mime ? $mime : 'audio/mpeg',
+		'titulo' => $titulo,
+	);
+}
+
+/**
  * Tarjeta de artículo de la bitácora.
  */
 function dcj_tarjeta_post() {

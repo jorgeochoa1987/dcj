@@ -98,6 +98,51 @@ function dcj_customize_register( $wp_customize ) {
 		);
 	}
 
+	// Audio del encabezado.
+	$wp_customize->add_section(
+		'dcj_audio',
+		array(
+			'title'       => 'En el aire',
+			'panel'       => 'dcj_panel',
+			'description' => 'Barra de reproducción arriba del menú. Sin archivo, no se muestra.',
+		)
+	);
+	$wp_customize->add_setting(
+		'dcj_audio_id',
+		array(
+			'default'           => 0,
+			'sanitize_callback' => 'absint',
+		)
+	);
+	$wp_customize->add_control(
+		new WP_Customize_Media_Control(
+			$wp_customize,
+			'dcj_audio_id',
+			array(
+				'label'       => 'Audio',
+				'description' => 'Mp3, m4a o wav. Al cambiar el archivo, la barra usa el nuevo.',
+				'section'     => 'dcj_audio',
+				'mime_type'   => 'audio',
+			)
+		)
+	);
+	$wp_customize->add_setting(
+		'dcj_audio_titulo',
+		array(
+			'default'           => '',
+			'sanitize_callback' => 'sanitize_text_field',
+		)
+	);
+	$wp_customize->add_control(
+		'dcj_audio_titulo',
+		array(
+			'label'       => 'Título del episodio',
+			'description' => 'Si lo dejas vacío, usa el nombre del archivo.',
+			'section'     => 'dcj_audio',
+			'type'        => 'text',
+		)
+	);
+
 	// Marca y contacto.
 	$wp_customize->add_section(
 		'dcj_marca',
