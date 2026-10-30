@@ -110,6 +110,7 @@ function dcjab_revisar( $forzar_todos = false ) {
 	delete_transient( 'dcjab_lock' );
 	delete_transient( 'dcj_yt_feed' );
 	delete_transient( 'dcj_yt_feed_v2' );
+	delete_transient( 'dcj_yt_feed_v3' );
 	update_option( 'dcj_autoblog_ultimo', array( 'fecha' => time(), 'res' => $res ), false );
 	return $res;
 }

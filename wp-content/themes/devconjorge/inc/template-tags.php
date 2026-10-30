@@ -59,19 +59,32 @@ function dcj_fotos_editor() {
 /**
  * Tablero split-flap: una celda por letra (máximo 6, regla de marca).
  *
- * @param string $palabra Palabra.
- * @param string $tamano  sm | xl.
- * @param int    $lima    Índice de la celda rellena de lima (-1 ninguna).
+ * @param string   $palabra Palabra.
+ * @param string   $tamano  sm | xl.
+ * @param int      $lima    Índice de la celda rellena de lima (-1 ninguna).
+ * @param string[] $ciclo   Otras palabras de hasta 6 letras. El tablero las va mostrando.
  */
-function dcj_flap( $palabra, $tamano = 'sm', $lima = -1 ) {
-	$letras = mb_str_split( mb_substr( mb_strtoupper( $palabra, 'UTF-8' ), 0, 6 ) );
-	printf( '<span class="flaps flaps--%s" role="img" aria-label="%s">', esc_attr( $tamano ), esc_attr( $palabra ) );
+function dcj_flap( $palabra, $tamano = 'sm', $lima = -1, $ciclo = array() ) {
+	$palabras = array();
+	foreach ( array_merge( array( $palabra ), $ciclo ) as $item ) {
+		$item = mb_substr( mb_strtoupper( $item, 'UTF-8' ), 0, 6 );
+		if ( '' !== $item && ! in_array( $item, $palabras, true ) ) {
+			$palabras[] = $item;
+		}
+	}
+	$ancho = 1;
+	foreach ( $palabras as $item ) {
+		$ancho = max( $ancho, mb_strlen( $item ) );
+	}
+	$letras = mb_str_split( str_pad( $palabras[0], $ancho ) );
+	$attrs  = count( $palabras ) > 1 ? ' data-palabras="' . esc_attr( implode( ',', $palabras ) ) . '"' : '';
+	printf( '<span class="flaps flaps--%s" role="img" aria-label="%s"%s>', esc_attr( $tamano ), esc_attr( implode( ', ', $palabras ) ), $attrs );
 	foreach ( $letras as $i => $letra ) {
 		printf(
 			'<span class="flap%s" style="--i:%d" aria-hidden="true">%s</span>',
 			$i === $lima ? ' flap--lima' : '',
 			(int) $i,
-			esc_html( $letra )
+			esc_html( ' ' === $letra ? '' : $letra )
 		);
 	}
 	echo '</span>';

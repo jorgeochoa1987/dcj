@@ -150,7 +150,7 @@ $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['su
 
 <section class="hype reveal" aria-label="Cero hype">
 	<p class="eyebrow">LA ÚNICA REGLA DE ESTE CANAL</p>
-	<?php dcj_flap( '0HYPE', 'xl', 0 ); ?>
+	<?php dcj_flap( '0HYPE', 'xl', 0, array( 'HUMO', 'JERGA', 'DATOS', 'GRATIS' ) ); ?>
 	<p class="hype__txt">Evitemos el humo. Si no se puede abrir, citar o repetir, no va en el video.</p>
 	<ul class="hype-reglas">
 		<li>

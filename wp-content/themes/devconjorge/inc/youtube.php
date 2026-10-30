@@ -59,17 +59,7 @@ function dcj_youtube_suscriptores() {
  * @return array[] Cada video: id, titulo, hook, fecha (timestamp), descripcion, vistas, url, post_url.
  */
 function dcj_youtube_videos( $total = 8 ) {
-	$fijos = dcj_videos_fijos();
-	if ( $fijos ) {
-		$videos = array_slice( $fijos, 0, max( 1, (int) $total ) );
-		foreach ( $videos as &$v ) {
-			$v['post_url'] = dcj_post_de_video( $v['id'] );
-		}
-		unset( $v );
-		return $videos;
-	}
-
-	$videos = get_transient( 'dcj_yt_feed_v2' );
+	$videos = get_transient( 'dcj_yt_feed_v3' );
 
 	if ( false === $videos ) {
 		$videos = dcj_videos_desde_rss();
@@ -77,8 +67,11 @@ function dcj_youtube_videos( $total = 8 ) {
 			// El RSS del canal responde 404. Los Shorts públicos no piden OAuth ni API key.
 			$videos = dcj_videos_desde_shorts();
 		}
+		if ( ! $videos ) {
+			$videos = dcj_videos_fijos();
+		}
 
-		set_transient( 'dcj_yt_feed_v2', $videos, $videos ? 30 * MINUTE_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
+		set_transient( 'dcj_yt_feed_v3', $videos, $videos ? 5 * MINUTE_IN_SECONDS : 2 * MINUTE_IN_SECONDS );
 	}
 
 	$videos = array_slice( $videos, 0, max( 1, (int) $total ) );

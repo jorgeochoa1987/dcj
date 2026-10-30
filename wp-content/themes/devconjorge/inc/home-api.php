@@ -96,6 +96,7 @@ function dcj_rest_actualizar_home( WP_REST_Request $req ) {
 		remove_theme_mod( 'dcj_videos_fijos' );
 		delete_transient( 'dcj_yt_feed' );
 		delete_transient( 'dcj_yt_feed_v2' );
+		delete_transient( 'dcj_yt_feed_v3' );
 	}
 
 	if ( isset( $datos['videos'] ) && is_array( $datos['videos'] ) ) {

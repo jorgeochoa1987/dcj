@@ -138,5 +138,6 @@ function dcj_limpiar_cache_youtube() {
 	delete_transient( 'dcj_yt_subs' );
 	delete_transient( 'dcj_yt_feed' );
 	delete_transient( 'dcj_yt_feed_v2' );
+	delete_transient( 'dcj_yt_feed_v3' );
 }
 add_action( 'customize_save_after', 'dcj_limpiar_cache_youtube' );

@@ -74,6 +74,22 @@
 		counts.forEach(function (el) { pintar(el, 0); co.observe(el); });
 	}
 
+	/* ---------- El tablero de 0HYPE pasa por más palabras ---------- */
+	var tablero = document.querySelector('[data-palabras]');
+	if (tablero && !reduce) {
+		var palabras = tablero.getAttribute('data-palabras').split(',');
+		var celdas = tablero.querySelectorAll('.flap');
+		var indice = 0;
+		setInterval(function () {
+			indice = (indice + 1) % palabras.length;
+			var letras = palabras[indice].toUpperCase();
+			tablero.setAttribute('aria-label', palabras.join(', '));
+			celdas.forEach(function (celda, i) {
+				celda.textContent = letras.charAt(i) || '';
+			});
+		}, 2600);
+	}
+
 	/* ---------- WhatsApp se pega al lado al pasar la comunidad ---------- */
 	var pegado = document.querySelector('[data-wa-pegado]');
 	var comunidad = document.getElementById('comunidad');
