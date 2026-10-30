@@ -54,6 +54,25 @@ services:
       - PMA_PORT=3306
       - UPLOAD_LIMIT=64M
 
+  mcp:
+    build: ./tools/dcj-mcp
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      - SERVICE_FQDN_MCP_3000
+      - MCP_HTTP=1
+      - PORT=3000
+      - WORDPRESS_URL=https://devconjorge.com
+      - WORDPRESS_USER=${WORDPRESS_USER}
+      - WORDPRESS_APP_PASSWORD=${WORDPRESS_APP_PASSWORD}
+      - MCP_ACCESS_TOKEN=${MCP_ACCESS_TOKEN}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
 volumes:
   wordpress-files:
   mariadb-data:

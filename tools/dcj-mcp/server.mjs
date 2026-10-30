@@ -1,8 +1,11 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { basename, dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -17,10 +20,13 @@ const TOPE = 12 * 1024 * 1024;
 
 cargarEnv(resolve(RAIZ, ".env"));
 
-const server = new McpServer({
-	name: "devconjorge",
-	version: "1.0.0",
-});
+const EN_HTTP = process.env.MCP_HTTP === "1";
+
+function crearServidor() {
+	const server = new McpServer({
+		name: "devconjorge",
+		version: "1.0.0",
+	});
 
 server.registerTool(
 	"listar_entradas",
@@ -171,9 +177,9 @@ server.registerTool(
 	"subir_imagen",
 	{
 		title: "Subir imagen",
-		description: "Sube una imagen a Medios de WordPress desde un archivo local o una URL https. Puede dejarla como imagen destacada de una entrada o insertarla al final del texto.",
+		description: "Sube una imagen a Medios de WordPress. En el servidor remoto solo acepta una URL https. Puede dejarla como imagen destacada o insertarla al final del texto.",
 		inputSchema: {
-			ruta: z.string().optional().describe("Ruta local del archivo, absoluta o relativa al proyecto"),
+			ruta: z.string().optional().describe("Solo en local: ruta del archivo"),
 			url: z.string().url().optional().describe("URL https de la imagen"),
 			alt: z.string().optional().describe("Texto alternativo"),
 			titulo: z.string().optional(),
@@ -184,8 +190,11 @@ server.registerTool(
 	},
 	async ({ ruta, url, alt, titulo, entrada_id, destacada, en_el_texto }) => {
 		try {
+			if (EN_HTTP && ruta) {
+				throw new Error("En el servidor solo se acepta una URL https.");
+			}
 			if (!ruta && !url) {
-				throw new Error("Indica ruta o url.");
+				throw new Error("Indica una URL https.");
 			}
 			const archivo = ruta ? await leerLocal(ruta) : await leerUrl(url);
 			const media = await wp("POST", "/wp-json/wp/v2/media", archivo.bytes, {
@@ -220,11 +229,69 @@ server.registerTool(
 			return fallo(error);
 		}
 	}
-);
+	);
+
+	return server;
+}
 
 async function main() {
-	const transport = new StdioServerTransport();
-	await server.connect(transport);
+	if (!EN_HTTP) {
+		const transport = new StdioServerTransport();
+		await crearServidor().connect(transport);
+		return;
+	}
+
+	const token = (process.env.MCP_ACCESS_TOKEN || "").trim();
+	if (token.length < 24) {
+		console.error("MCP_ACCESS_TOKEN debe existir y tener al menos 24 caracteres.");
+		process.exit(1);
+	}
+	try {
+		credenciales();
+	} catch (error) {
+		console.error(error instanceof Error ? error.message : error);
+		process.exit(1);
+	}
+
+	const puerto = Number(process.env.PORT || 3000);
+	const app = createMcpExpressApp({ host: "0.0.0.0" });
+	app.get("/health", (_req, res) => {
+		res.status(200).json({ ok: true });
+	});
+	app.use("/mcp", (req, res, next) => {
+		const header = req.get("authorization") || "";
+		const recibido = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+		if (!recibido || !tokensIguales(recibido, token)) {
+			res.set("WWW-Authenticate", "Bearer");
+			res.status(401).json({ error: "unauthorized" });
+			return;
+		}
+		next();
+	});
+	app.all("/mcp", async (req, res) => {
+		const mcp = crearServidor();
+		const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+		try {
+			await mcp.connect(transport);
+			await transport.handleRequest(req, res, req.body);
+		} catch (error) {
+			console.error(error instanceof Error ? error.message : error);
+			if (!res.headersSent) {
+				res.status(500).json({ error: "error" });
+			}
+		} finally {
+			res.on("close", () => {
+				transport.close();
+			});
+		}
+	});
+	app.listen(puerto, "0.0.0.0");
+}
+
+function tokensIguales(recibido, esperado) {
+	const a = createHash("sha256").update(recibido).digest();
+	const b = createHash("sha256").update(esperado).digest();
+	return timingSafeEqual(a, b);
 }
 
 await main();
@@ -256,7 +323,7 @@ function credenciales() {
 	const user = (process.env.WORDPRESS_USER || "").trim();
 	const password = (process.env.WORDPRESS_APP_PASSWORD || "").replace(/\s+/g, "");
 	if (!user || !password) {
-		throw new Error("Faltan WORDPRESS_USER y WORDPRESS_APP_PASSWORD en el archivo .env de la raíz del proyecto. Créala en WordPress: Usuarios → Perfil → Contraseñas de aplicación.");
+		throw new Error("Faltan WORDPRESS_USER y WORDPRESS_APP_PASSWORD.");
 	}
 	return { url, user, password };
 }
