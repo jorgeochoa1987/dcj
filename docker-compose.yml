@@ -4,6 +4,8 @@ services:
   wordpress:
     build: .
     restart: unless-stopped
+    expose:
+      - "80"
     environment:
       - SERVICE_FQDN_WORDPRESS_80
       - WORDPRESS_DB_HOST=db
@@ -41,6 +43,8 @@ services:
   phpmyadmin:
     image: phpmyadmin:5.2-apache
     restart: unless-stopped
+    expose:
+      - "80"
     depends_on:
       db:
         condition: service_healthy

@@ -8,5 +8,7 @@ COPY docker/uploads.ini /usr/local/etc/php/conf.d/dcj-uploads.ini
 COPY docker/dcj-entrypoint.sh /usr/local/bin/dcj-entrypoint.sh
 RUN chmod +x /usr/local/bin/dcj-entrypoint.sh
 
+EXPOSE 80
+
 ENTRYPOINT ["dcj-entrypoint.sh"]
 CMD ["apache2-foreground"]
