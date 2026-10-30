@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "devconjorge": {
+      "command": "node",
+      "args": ["tools/dcj-mcp/server.mjs"]
+    }
+  }
+}
