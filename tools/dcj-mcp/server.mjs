@@ -187,9 +187,11 @@ server.registerTool(
 			entrada_id: z.number().int().positive().optional().describe("Entrada a la que se asocia"),
 			destacada: z.boolean().optional().describe("Si es true y hay entrada_id, queda como imagen destacada"),
 			en_el_texto: z.boolean().optional().describe("Si es true y hay entrada_id, agrega la imagen al final del contenido"),
+			retrato: z.boolean().optional().describe("Si es true, queda como la foto de Jorge en el home"),
+			en_el_home: z.boolean().optional().describe("Si es true, se agrega a las fotos del home"),
 		},
 	},
-	async ({ ruta, url, alt, titulo, entrada_id, destacada, en_el_texto }) => {
+	async ({ ruta, url, alt, titulo, entrada_id, destacada, en_el_texto, retrato, en_el_home }) => {
 		try {
 			if (EN_HTTP && ruta) {
 				throw new Error("En el servidor solo se acepta una URL https.");
@@ -225,11 +227,89 @@ server.registerTool(
 				await wp("POST", `/wp-json/wp/v2/posts/${entrada_id}`, { content: `${previo}\n${figura}` });
 				resultado.insertada_en = entrada_id;
 			}
+			if (retrato) {
+				await wp("POST", "/wp-json/dcj/v1/home", { foto_id: media.id });
+				resultado.retrato_del_home = media.id;
+			}
+			if (en_el_home) {
+				await wp("POST", "/wp-json/dcj/v1/home", { agregar_foto: media.id });
+				resultado.foto_del_home = media.id;
+			}
 			return texto(JSON.stringify(resultado, null, 2));
 		} catch (error) {
 			return fallo(error);
 		}
 	}
+	);
+
+	server.registerTool(
+		"ver_home",
+		{
+			title: "Ver home",
+			description: "Devuelve las cifras de redes, los videos y las fotos que se ven en el inicio de devconjorge.com.",
+			inputSchema: {},
+		},
+		async () => {
+			try {
+				const home = await wp("GET", "/wp-json/dcj/v1/home");
+				return texto(JSON.stringify(home, null, 2));
+			} catch (error) {
+				return fallo(error);
+			}
+		}
+	);
+
+	server.registerTool(
+		"actualizar_home",
+		{
+			title: "Actualizar home",
+			description: "Cambia las cifras de seguidores, los videos del inicio o la lista de fotos. Para volver a los Shorts automáticos de YouTube, refrescar_videos en true.",
+			inputSchema: {
+				cifras: z.object({
+					youtube: z.number().int().min(0).optional(),
+					tiktok: z.number().int().min(0).optional(),
+					instagram: z.number().int().min(0).optional(),
+					facebook: z.number().int().min(0).optional(),
+					whatsapp: z.number().int().min(0).optional(),
+					twitch: z.number().int().min(0).optional(),
+				}).optional(),
+				videos: z.array(z.object({
+					id: z.string().describe("ID del Short de YouTube"),
+					titulo: z.string().optional(),
+					vistas: z.number().int().min(0).optional(),
+				})).optional().describe("Si se envía, estos videos reemplazan a los automáticos del canal"),
+				refrescar_videos: z.boolean().optional().describe("Quita la lista fija y vuelve a leer el canal"),
+				foto_id: z.number().int().positive().optional().describe("ID de Medios para el retrato"),
+				fotos: z.array(z.number().int().positive()).optional().describe("IDs de Medios que quedan como fotos del home"),
+			},
+		},
+		async ({ cifras, videos, refrescar_videos, foto_id, fotos }) => {
+			try {
+				const cuerpo = {};
+				if (cifras) {
+					cuerpo.cifras = cifras;
+				}
+				if (videos) {
+					cuerpo.videos = videos;
+				}
+				if (refrescar_videos) {
+					cuerpo.refrescar_videos = true;
+				}
+				if (foto_id) {
+					cuerpo.foto_id = foto_id;
+				}
+				if (fotos) {
+					cuerpo.fotos = fotos;
+				}
+				if (!Object.keys(cuerpo).length) {
+					throw new Error("No hay nada que actualizar en el home.");
+				}
+				const home = await wp("POST", "/wp-json/dcj/v1/home", cuerpo);
+				return texto(JSON.stringify(home, null, 2));
+			} catch (error) {
+				return fallo(error);
+			}
+		}
 	);
 
 	return server;

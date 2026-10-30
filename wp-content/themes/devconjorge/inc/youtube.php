@@ -59,6 +59,16 @@ function dcj_youtube_suscriptores() {
  * @return array[] Cada video: id, titulo, hook, fecha (timestamp), descripcion, vistas, url, post_url.
  */
 function dcj_youtube_videos( $total = 8 ) {
+	$fijos = dcj_videos_fijos();
+	if ( $fijos ) {
+		$videos = array_slice( $fijos, 0, max( 1, (int) $total ) );
+		foreach ( $videos as &$v ) {
+			$v['post_url'] = dcj_post_de_video( $v['id'] );
+		}
+		unset( $v );
+		return $videos;
+	}
+
 	$videos = get_transient( 'dcj_yt_feed_v2' );
 
 	if ( false === $videos ) {
@@ -78,6 +88,36 @@ function dcj_youtube_videos( $total = 8 ) {
 	}
 	unset( $v );
 
+	return $videos;
+}
+
+/**
+ * Videos fijados a mano para el home. Vacío si el home sigue el canal.
+ *
+ * @return array
+ */
+function dcj_videos_fijos() {
+	$lista = json_decode( (string) get_theme_mod( 'dcj_videos_fijos', '' ), true );
+	if ( ! is_array( $lista ) ) {
+		return array();
+	}
+	$videos = array();
+	foreach ( $lista as $item ) {
+		$id = is_array( $item ) ? (string) ( $item['id'] ?? '' ) : '';
+		if ( ! preg_match( '/^[A-Za-z0-9_-]{6,20}$/', $id ) ) {
+			continue;
+		}
+		$titulo   = dcj_limpiar_titulo( (string) ( $item['titulo'] ?? $id ) );
+		$videos[] = array(
+			'id'          => $id,
+			'titulo'      => '' !== $titulo ? $titulo : $id,
+			'hook'        => dcj_hook( '' !== $titulo ? $titulo : $id ),
+			'fecha'       => 0,
+			'descripcion' => '',
+			'vistas'      => isset( $item['vistas'] ) ? (int) $item['vistas'] : 0,
+			'url'         => 'https://youtube.com/shorts/' . $id,
+		);
+	}
 	return $videos;
 }
 
