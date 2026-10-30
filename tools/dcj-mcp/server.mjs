@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { readFileSync, existsSync } from "node:fs";
 import { basename, dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +21,7 @@ const TOPE = 12 * 1024 * 1024;
 cargarEnv(resolve(RAIZ, ".env"));
 
 const EN_HTTP = process.env.MCP_HTTP === "1";
+const sesion = new AsyncLocalStorage();
 
 function crearServidor() {
 	const server = new McpServer({
@@ -241,15 +242,8 @@ async function main() {
 		return;
 	}
 
-	const token = (process.env.MCP_ACCESS_TOKEN || "").trim();
-	if (token.length < 24) {
-		console.error("MCP_ACCESS_TOKEN debe existir y tener al menos 24 caracteres.");
-		process.exit(1);
-	}
-	try {
-		credenciales();
-	} catch (error) {
-		console.error(error instanceof Error ? error.message : error);
+	if (!(process.env.WORDPRESS_USER || "").trim()) {
+		console.error("Falta WORDPRESS_USER.");
 		process.exit(1);
 	}
 
@@ -258,22 +252,21 @@ async function main() {
 	app.get("/health", (_req, res) => {
 		res.status(200).json({ ok: true });
 	});
-	app.use("/mcp", (req, res, next) => {
+	app.all("/mcp", async (req, res) => {
 		const header = req.get("authorization") || "";
-		const recibido = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
-		if (!recibido || !tokensIguales(recibido, token)) {
+		const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+		if (!(await tokenDeWordpress(token))) {
 			res.set("WWW-Authenticate", "Bearer");
 			res.status(401).json({ error: "unauthorized" });
 			return;
 		}
-		next();
-	});
-	app.all("/mcp", async (req, res) => {
 		const mcp = crearServidor();
 		const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 		try {
-			await mcp.connect(transport);
-			await transport.handleRequest(req, res, req.body);
+			await sesion.run(token.replace(/\s+/g, ""), async () => {
+				await mcp.connect(transport);
+				await transport.handleRequest(req, res, req.body);
+			});
 		} catch (error) {
 			console.error(error instanceof Error ? error.message : error);
 			if (!res.headersSent) {
@@ -288,10 +281,24 @@ async function main() {
 	app.listen(puerto, "0.0.0.0");
 }
 
-function tokensIguales(recibido, esperado) {
-	const a = createHash("sha256").update(recibido).digest();
-	const b = createHash("sha256").update(esperado).digest();
-	return timingSafeEqual(a, b);
+async function tokenDeWordpress(token) {
+	const password = (token || "").replace(/\s+/g, "");
+	if (password.length < 8) {
+		return false;
+	}
+	const url = (process.env.WORDPRESS_URL || "https://devconjorge.com").replace(/\/$/, "");
+	const user = process.env.WORDPRESS_USER.trim();
+	try {
+		const respuesta = await fetch(`${url}/wp-json/wp/v2/users/me?context=edit`, {
+			headers: {
+				Authorization: `Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`,
+				Accept: "application/json",
+			},
+		});
+		return respuesta.ok;
+	} catch {
+		return false;
+	}
 }
 
 await main();
@@ -321,7 +328,7 @@ function cargarEnv(ruta) {
 function credenciales() {
 	const url = (process.env.WORDPRESS_URL || "https://devconjorge.com").replace(/\/$/, "");
 	const user = (process.env.WORDPRESS_USER || "").trim();
-	const password = (process.env.WORDPRESS_APP_PASSWORD || "").replace(/\s+/g, "");
+	const password = (sesion.getStore() || process.env.WORDPRESS_APP_PASSWORD || "").replace(/\s+/g, "");
 	if (!user || !password) {
 		throw new Error("Faltan WORDPRESS_USER y WORDPRESS_APP_PASSWORD.");
 	}

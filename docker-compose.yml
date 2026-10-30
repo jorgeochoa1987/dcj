@@ -65,8 +65,6 @@ services:
       - PORT=3000
       - WORDPRESS_URL=https://devconjorge.com
       - WORDPRESS_USER=${WORDPRESS_USER}
-      - WORDPRESS_APP_PASSWORD=${WORDPRESS_APP_PASSWORD}
-      - MCP_ACCESS_TOKEN=${MCP_ACCESS_TOKEN}
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health"]
       interval: 30s
