@@ -136,6 +136,21 @@ function dcj_excerpt_more() {
 add_filter( 'excerpt_more', 'dcj_excerpt_more' );
 
 /**
+ * devconjorge.com/wp abre el canal de WhatsApp.
+ * No toca /wp-admin, /wp-json ni /wp-content.
+ */
+function dcj_redirect_whatsapp() {
+	$ruta = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+	$ruta = trim( (string) $ruta, '/' );
+	if ( 'wp' !== $ruta ) {
+		return;
+	}
+	wp_redirect( 'https://whatsapp.com/channel/0029Vb94mD5FXUucEFL2mU47', 301 );
+	exit;
+}
+add_action( 'template_redirect', 'dcj_redirect_whatsapp', 0 );
+
+/**
  * En la página de inicio, la foto se pone desde el editor, no con un ID.
  *
  * @param WP_Post $post Entrada en edición.
