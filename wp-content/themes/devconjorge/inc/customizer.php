@@ -104,7 +104,7 @@ function dcj_customize_register( $wp_customize ) {
 		array(
 			'title'       => 'En el aire',
 			'panel'       => 'dcj_panel',
-			'description' => 'Barra de reproducción arriba del menú. Sin archivo, no se muestra.',
+			'description' => 'Los capítulos se agregan en el menú Capítulos. Este audio solo suena si todavía no hay ninguno publicado.',
 		)
 	);
 	$wp_customize->add_setting(
@@ -120,7 +120,7 @@ function dcj_customize_register( $wp_customize ) {
 			'dcj_audio_id',
 			array(
 				'label'       => 'Audio',
-				'description' => 'Mp3, m4a o wav. Al cambiar el archivo, la barra usa el nuevo.',
+				'description' => 'Reserva. En cuanto publiques un capítulo con audio, el playlist lo reemplaza.',
 				'section'     => 'dcj_audio',
 				'mime_type'   => 'audio',
 			)

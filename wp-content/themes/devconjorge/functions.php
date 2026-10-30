@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DCJ_VERSION', '1.6.0' );
+define( 'DCJ_VERSION', '1.7.0' );
 define( 'DCJ_DIR', get_template_directory() );
 define( 'DCJ_URI', get_template_directory_uri() );
 
@@ -16,6 +16,7 @@ require_once DCJ_DIR . '/inc/customizer.php';
 require_once DCJ_DIR . '/inc/youtube.php';
 require_once DCJ_DIR . '/inc/suscriptores.php';
 require_once DCJ_DIR . '/inc/template-tags.php';
+require_once DCJ_DIR . '/inc/caps.php';
 require_once DCJ_DIR . '/inc/home-api.php';
 require_once DCJ_DIR . '/inc/entrada-api.php';
 

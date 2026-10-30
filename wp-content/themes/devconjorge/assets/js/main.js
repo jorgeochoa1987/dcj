@@ -82,7 +82,13 @@
 		var seek = aire.querySelector('[data-aire-seek]');
 		var ahora = aire.querySelector('[data-aire-ahora]');
 		var total = aire.querySelector('[data-aire-total]');
+		var tituloEl = aire.querySelector('[data-aire-titulo]');
+		var listaBtn = aire.querySelector('[data-aire-lista]');
+		var lista = aire.querySelector('[data-aire-caps]');
+		var temas = lista ? Array.prototype.slice.call(lista.querySelectorAll('[data-src]')) : [];
+		var actual = 0;
 		var arrastra = false;
+		var topbar = aire.closest('.topbar');
 
 		function reloj(seg) {
 			if (!isFinite(seg) || seg < 0) { seg = 0; }
@@ -110,11 +116,59 @@
 			aire.classList.remove('is-on');
 			boton.setAttribute('aria-label', 'Reproducir');
 		}
+		function cargar(i, autoplay) {
+			var item = temas[i];
+			if (!item) { return; }
+			actual = i;
+			audio.pause();
+			while (audio.firstChild) { audio.removeChild(audio.firstChild); }
+			var source = document.createElement('source');
+			source.src = item.getAttribute('data-src');
+			source.type = item.getAttribute('data-mime') || 'audio/mpeg';
+			audio.appendChild(source);
+			audio.load();
+			if (tituloEl) { tituloEl.textContent = item.getAttribute('data-titulo') || ''; }
+			marcar(0);
+			ahora.textContent = '0:00';
+			total.textContent = '0:00';
+			temas.forEach(function (tema, n) {
+				if (n === i) { tema.setAttribute('aria-current', 'true'); }
+				else { tema.removeAttribute('aria-current'); }
+			});
+			if (autoplay) {
+				var intento = audio.play();
+				if (intento && intento.catch) { intento.catch(function () {}); }
+			}
+		}
 		audio.addEventListener('pause', parado);
-		audio.addEventListener('ended', parado);
+		audio.addEventListener('ended', function () {
+			parado();
+			if (actual + 1 < temas.length) { cargar(actual + 1, true); }
+		});
 		boton.addEventListener('click', function () {
 			if (audio.paused) { audio.play(); } else { audio.pause(); }
 		});
+		temas.forEach(function (item, i) {
+			item.addEventListener('click', function () {
+				cargar(i, true);
+				if (lista) { lista.hidden = true; }
+				if (listaBtn) { listaBtn.setAttribute('aria-expanded', 'false'); }
+			});
+		});
+		if (listaBtn && lista) {
+			listaBtn.addEventListener('click', function () {
+				var abrir = lista.hidden;
+				lista.hidden = !abrir;
+				listaBtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+			});
+		}
+		function mini() {
+			var pegado = (window.scrollY || 0) > 48;
+			aire.classList.toggle('is-mini', pegado);
+			if (topbar) { topbar.classList.toggle('is-mini', pegado); }
+		}
+		window.addEventListener('scroll', mini, { passive: true });
+		mini();
 		seek.addEventListener('input', function () {
 			arrastra = true;
 			marcar(Number(seek.value));
