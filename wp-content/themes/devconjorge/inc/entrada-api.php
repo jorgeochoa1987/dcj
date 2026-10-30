@@ -52,10 +52,12 @@ function dcj_rest_ver_extra( WP_REST_Request $req ) {
 		return new WP_Error( 'dcj_entrada', 'Esa entrada no existe.', array( 'status' => 404 ) );
 	}
 	$tags = wp_get_post_tags( $id, array( 'fields' => 'names' ) );
+	$cats = get_the_category( $id );
 	return rest_ensure_response(
 		array(
 			'id'               => $id,
 			'etiquetas'        => is_array( $tags ) ? $tags : array(),
+			'categorias'       => $cats ? wp_list_pluck( $cats, 'name' ) : array(),
 			'seo_titulo'       => (string) get_post_meta( $id, '_yoast_wpseo_title', true ),
 			'seo_descripcion'  => (string) get_post_meta( $id, '_yoast_wpseo_metadesc', true ),
 			'frase_clave'      => (string) get_post_meta( $id, '_yoast_wpseo_focuskw', true ),
@@ -90,6 +92,13 @@ function dcj_rest_guardar_extra( WP_REST_Request $req ) {
 		wp_set_post_tags( $id, $nombres, true );
 	}
 
+	if ( isset( $datos['categorias'] ) && is_array( $datos['categorias'] ) ) {
+		$ids = dcj_ids_categorias( $datos['categorias'] );
+		if ( $ids ) {
+			wp_set_post_categories( $id, $ids );
+		}
+	}
+
 	$campos = array(
 		'seo_titulo'      => '_yoast_wpseo_title',
 		'seo_descripcion' => '_yoast_wpseo_metadesc',
@@ -103,4 +112,30 @@ function dcj_rest_guardar_extra( WP_REST_Request $req ) {
 	}
 
 	return dcj_rest_ver_extra( $req );
+}
+
+/**
+ * Crea la categoría si no existe y devuelve sus IDs.
+ *
+ * @param array $nombres Nombres.
+ * @return int[]
+ */
+function dcj_ids_categorias( $nombres ) {
+	$ids = array();
+	foreach ( $nombres as $nombre ) {
+		$nombre = sanitize_text_field( (string) $nombre );
+		if ( '' === $nombre ) {
+			continue;
+		}
+		$existe = term_exists( $nombre, 'category' );
+		if ( $existe ) {
+			$ids[] = (int) ( is_array( $existe ) ? $existe['term_id'] : $existe );
+			continue;
+		}
+		$nueva = wp_insert_term( $nombre, 'category' );
+		if ( ! is_wp_error( $nueva ) ) {
+			$ids[] = (int) $nueva['term_id'];
+		}
+	}
+	return $ids;
 }

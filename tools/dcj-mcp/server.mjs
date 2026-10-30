@@ -22,6 +22,7 @@ cargarEnv(resolve(RAIZ, ".env"));
 
 const camposExtra = {
 	etiquetas: z.array(z.string()).optional().describe("Etiquetas de la entrada"),
+	categorias: z.array(z.string()).optional().describe("Categorías de la entrada. Si no existen, se crean"),
 	seo_titulo: z.string().optional().describe("Título SEO de Yoast"),
 	seo_descripcion: z.string().optional().describe("Meta descripción de Yoast"),
 	frase_clave: z.string().optional().describe("Frase clave de Yoast"),
@@ -492,6 +493,9 @@ async function completarEntrada(id, extra) {
 	const cuerpo = {};
 	if (extra.etiquetas?.length) {
 		cuerpo.etiquetas = extra.etiquetas;
+	}
+	if (extra.categorias?.length) {
+		cuerpo.categorias = extra.categorias;
 	}
 	if (extra.seo_titulo) {
 		cuerpo.seo_titulo = extra.seo_titulo;
