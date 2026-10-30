@@ -20,6 +20,14 @@ const TOPE = 12 * 1024 * 1024;
 
 cargarEnv(resolve(RAIZ, ".env"));
 
+const camposExtra = {
+	etiquetas: z.array(z.string()).optional().describe("Etiquetas de la entrada"),
+	seo_titulo: z.string().optional().describe("Título SEO de Yoast"),
+	seo_descripcion: z.string().optional().describe("Meta descripción de Yoast"),
+	frase_clave: z.string().optional().describe("Frase clave de Yoast"),
+	video_id: z.string().optional().describe("ID del Short. Su miniatura de YouTube queda como imagen destacada"),
+};
+
 const EN_HTTP = process.env.MCP_HTTP === "1";
 const sesion = new AsyncLocalStorage();
 
@@ -101,16 +109,17 @@ server.registerTool(
 	"crear_entrada",
 	{
 		title: "Crear entrada",
-		description: "Crea una entrada en la bitácora. Queda en borrador salvo que el estado sea publish.",
+		description: "Crea una entrada en la bitácora. Queda en borrador salvo que el estado sea publish. Acepta etiquetas, SEO de Yoast y el ID del Short para poner su miniatura como imagen destacada.",
 		inputSchema: {
 			titulo: z.string().min(1).describe("Título de la entrada"),
 			contenido: z.string().min(1).describe("Texto o HTML. El texto plano se convierte en párrafos"),
 			extracto: z.string().optional(),
 			estado: z.enum(["draft", "publish", "pending"]).optional().describe("Por defecto draft"),
 			slug: z.string().optional(),
+			...camposExtra,
 		},
 	},
-	async ({ titulo, contenido, extracto, estado, slug }) => {
+	async ({ titulo, contenido, extracto, estado, slug, ...extra }) => {
 		try {
 			const cuerpo = {
 				title: titulo,
@@ -124,7 +133,12 @@ server.registerTool(
 				cuerpo.slug = slug;
 			}
 			const e = await wp("POST", "/wp-json/wp/v2/posts", cuerpo);
-			return texto(resumen(e, "Entrada creada."));
+			const aviso = await completarEntrada(e.id, extra);
+			const salida = JSON.parse(resumen(e, "Entrada creada."));
+			if (aviso) {
+				salida.miniatura = aviso;
+			}
+			return texto(JSON.stringify(salida, null, 2));
 		} catch (error) {
 			return fallo(error);
 		}
@@ -135,7 +149,7 @@ server.registerTool(
 	"actualizar_entrada",
 	{
 		title: "Actualizar entrada",
-		description: "Actualiza título, contenido, extracto, slug o estado de una entrada existente.",
+		description: "Actualiza título, contenido, extracto, slug, estado, etiquetas, SEO de Yoast o la miniatura del Short.",
 		inputSchema: {
 			id: z.number().int().positive(),
 			titulo: z.string().optional(),
@@ -143,9 +157,10 @@ server.registerTool(
 			extracto: z.string().optional(),
 			estado: z.enum(["draft", "publish", "pending"]).optional(),
 			slug: z.string().optional(),
+			...camposExtra,
 		},
 	},
-	async ({ id, titulo, contenido, extracto, estado, slug }) => {
+	async ({ id, titulo, contenido, extracto, estado, slug, ...extra }) => {
 		try {
 			const cuerpo = {};
 			if (titulo) {
@@ -163,11 +178,19 @@ server.registerTool(
 			if (slug) {
 				cuerpo.slug = slug;
 			}
-			if (!Object.keys(cuerpo).length) {
+			const hayExtra = Object.values(extra).some((valor) => valor != null && valor !== "");
+			if (!Object.keys(cuerpo).length && !hayExtra) {
 				throw new Error("No hay nada que actualizar.");
 			}
-			const e = await wp("POST", `/wp-json/wp/v2/posts/${id}`, cuerpo);
-			return texto(resumen(e, "Entrada actualizada."));
+			const e = Object.keys(cuerpo).length
+				? await wp("POST", `/wp-json/wp/v2/posts/${id}`, cuerpo)
+				: await wp("GET", `/wp-json/wp/v2/posts/${id}?context=edit&_fields=id,status,link`);
+			const aviso = await completarEntrada(id, extra);
+			const salida = JSON.parse(resumen(e, "Entrada actualizada."));
+			if (aviso) {
+				salida.miniatura = aviso;
+			}
+			return texto(JSON.stringify(salida, null, 2));
 		} catch (error) {
 			return fallo(error);
 		}
@@ -333,17 +356,21 @@ async function main() {
 		res.status(200).json({ ok: true });
 	});
 	app.all("/mcp", async (req, res) => {
+		if (req.method === "GET" || req.method === "DELETE") {
+			res.status(405).json({ error: "method_not_allowed" });
+			return;
+		}
 		const header = req.get("authorization") || "";
 		const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
-		if (!(await tokenDeWordpress(token))) {
-			res.set("WWW-Authenticate", "Bearer");
+		const acceso = await tokenDeWordpress(token);
+		if (!acceso) {
 			res.status(401).json({ error: "unauthorized" });
 			return;
 		}
 		const mcp = crearServidor();
 		const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 		try {
-			await sesion.run(token.replace(/\s+/g, ""), async () => {
+			await sesion.run(acceso, async () => {
 				await mcp.connect(transport);
 				await transport.handleRequest(req, res, req.body);
 			});
@@ -362,23 +389,37 @@ async function main() {
 }
 
 async function tokenDeWordpress(token) {
-	const password = (token || "").replace(/\s+/g, "");
-	if (password.length < 8) {
-		return false;
+	const acceso = leerBearer(token);
+	if (!acceso.user || acceso.password.length < 8) {
+		return null;
 	}
 	const url = (process.env.WORDPRESS_URL || "https://devconjorge.com").replace(/\/$/, "");
-	const user = process.env.WORDPRESS_USER.trim();
 	try {
 		const respuesta = await fetch(`${url}/wp-json/wp/v2/users/me?context=edit`, {
 			headers: {
-				Authorization: `Basic ${Buffer.from(`${user}:${password}`).toString("base64")}`,
+				Authorization: `Basic ${Buffer.from(`${acceso.user}:${acceso.password}`).toString("base64")}`,
 				Accept: "application/json",
 			},
 		});
-		return respuesta.ok;
+		return respuesta.ok ? acceso : null;
 	} catch {
-		return false;
+		return null;
 	}
+}
+
+function leerBearer(token) {
+	const limpio = (token || "").trim();
+	const corte = limpio.indexOf(":");
+	if (corte > 0) {
+		return {
+			user: limpio.slice(0, corte).trim(),
+			password: limpio.slice(corte + 1).replace(/\s+/g, ""),
+		};
+	}
+	return {
+		user: (process.env.WORDPRESS_USER || "").trim(),
+		password: limpio.replace(/\s+/g, ""),
+	};
 }
 
 await main();
@@ -407,8 +448,9 @@ function cargarEnv(ruta) {
 
 function credenciales() {
 	const url = (process.env.WORDPRESS_URL || "https://devconjorge.com").replace(/\/$/, "");
-	const user = (process.env.WORDPRESS_USER || "").trim();
-	const password = (sesion.getStore() || process.env.WORDPRESS_APP_PASSWORD || "").replace(/\s+/g, "");
+	const guardado = sesion.getStore();
+	const user = (guardado?.user || process.env.WORDPRESS_USER || "").trim();
+	const password = (guardado?.password || process.env.WORDPRESS_APP_PASSWORD || "").replace(/\s+/g, "");
 	if (!user || !password) {
 		throw new Error("Faltan WORDPRESS_USER y WORDPRESS_APP_PASSWORD.");
 	}
@@ -444,6 +486,66 @@ async function wp(method, ruta, body, extra) {
 		throw new Error(`WordPress respondió ${respuesta.status}: ${mensaje}`);
 	}
 	return datos;
+}
+
+async function completarEntrada(id, extra) {
+	const cuerpo = {};
+	if (extra.etiquetas?.length) {
+		cuerpo.etiquetas = extra.etiquetas;
+	}
+	if (extra.seo_titulo) {
+		cuerpo.seo_titulo = extra.seo_titulo;
+	}
+	if (extra.seo_descripcion) {
+		cuerpo.seo_descripcion = extra.seo_descripcion;
+	}
+	if (extra.frase_clave) {
+		cuerpo.frase_clave = extra.frase_clave;
+	}
+	if (extra.video_id) {
+		cuerpo.video_id = extra.video_id;
+	}
+	if (Object.keys(cuerpo).length) {
+		await wp("POST", `/wp-json/dcj/v1/entrada/${id}`, cuerpo);
+	}
+	if (!extra.video_id) {
+		return "";
+	}
+	try {
+		const mediaId = await ponerMiniatura(id, extra.video_id);
+		return `Imagen destacada ${mediaId}`;
+	} catch (error) {
+		return error instanceof Error ? error.message : String(error);
+	}
+}
+
+async function ponerMiniatura(entradaId, videoId) {
+	const archivo = await descargarMiniatura(videoId);
+	const media = await wp("POST", "/wp-json/wp/v2/media", archivo.bytes, {
+		"Content-Type": archivo.mime,
+		"Content-Disposition": `attachment; filename="${archivo.nombre}"`,
+	});
+	await wp("POST", `/wp-json/wp/v2/posts/${entradaId}`, { featured_media: media.id });
+	return media.id;
+}
+
+async function descargarMiniatura(videoId) {
+	if (!/^[A-Za-z0-9_-]{6,20}$/.test(videoId)) {
+		throw new Error("El ID del video no es válido.");
+	}
+	const calidades = ["maxresdefault", "sddefault", "hqdefault", "oardefault", "mqdefault"];
+	for (const calidad of calidades) {
+		const respuesta = await fetch(`https://i.ytimg.com/vi/${videoId}/${calidad}.jpg`);
+		if (!respuesta.ok) {
+			continue;
+		}
+		const bytes = Buffer.from(await respuesta.arrayBuffer());
+		if (bytes.length < 2000) {
+			continue;
+		}
+		return normalizar(bytes, `${videoId}.jpg`, "image/jpeg");
+	}
+	throw new Error("YouTube no entregó la miniatura de ese video.");
 }
 
 async function leerLocal(ruta) {
