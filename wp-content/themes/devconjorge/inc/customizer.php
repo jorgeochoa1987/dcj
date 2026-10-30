@@ -132,6 +132,28 @@ function dcj_customize_register( $wp_customize ) {
 add_action( 'customize_register', 'dcj_customize_register' );
 
 /**
+ * El logo usa el ajuste nativo de WordPress y se muestra en Firma y contacto.
+ *
+ * @param WP_Customize_Manager $wp_customize Personalizador.
+ */
+function dcj_logo_control( $wp_customize ) {
+	$wp_customize->add_control(
+		new WP_Customize_Media_Control(
+			$wp_customize,
+			'dcj_logo_media',
+			array(
+				'label'       => 'Logo del encabezado',
+				'description' => 'Si no hay imagen, el encabezado sigue mostrando DCJ.',
+				'section'     => 'dcj_marca',
+				'mime_type'   => 'image',
+				'settings'    => 'custom_logo',
+			)
+		)
+	);
+}
+add_action( 'customize_register', 'dcj_logo_control', 30 );
+
+/**
  * Al guardar el Personalizador, borra cachés de YouTube.
  */
 function dcj_limpiar_cache_youtube() {

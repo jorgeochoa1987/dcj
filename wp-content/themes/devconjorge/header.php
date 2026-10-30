@@ -47,7 +47,15 @@ $dcj_inicio   = home_url( '/' );
 
 <header class="topbar">
 	<nav class="nav glass" aria-label="Principal">
-		<a class="logo" href="<?php echo esc_url( $dcj_inicio ); ?>" aria-label="DevConJorge, inicio">DCJ</a>
+		<a class="logo<?php echo has_custom_logo() ? ' logo--img' : ''; ?>" href="<?php echo esc_url( $dcj_inicio ); ?>" aria-label="DevConJorge, inicio">
+			<?php
+			if ( has_custom_logo() ) {
+				echo wp_get_attachment_image( (int) get_theme_mod( 'custom_logo' ), 'medium', false, array( 'alt' => 'DevConJorge' ) );
+			} else {
+				echo 'DCJ';
+			}
+			?>
+		</a>
 		<button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links">
 			<span class="sr-only">Abrir menú</span>
 			<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
