@@ -34,8 +34,104 @@ function dcj_registrar_caps() {
 			'rewrite'             => false,
 		)
 	);
+	register_taxonomy(
+		'dcj_categoria',
+		array( 'dcj_cap' ),
+		array(
+			'labels'            => array(
+				'name'          => 'Categorías',
+				'singular_name' => 'Categoría',
+				'add_new_item'  => 'Nueva categoría',
+				'edit_item'     => 'Editar categoría',
+				'menu_name'     => 'Categorías',
+				'all_items'     => 'Todas las categorías',
+				'search_items'  => 'Buscar categorías',
+			),
+			'hierarchical'      => true,
+			'public'            => false,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => false,
+		)
+	);
 }
 add_action( 'init', 'dcj_registrar_caps' );
+
+/**
+ * Crea la página del programa si todavía no existe.
+ */
+function dcj_asegurar_pildoras() {
+	$guardada = (int) get_option( 'dcj_pagina_pildoras' );
+	if ( $guardada && 'publish' === get_post_status( $guardada ) ) {
+		return;
+	}
+	$pagina = get_page_by_path( 'pildoras' );
+	$id     = $pagina ? (int) $pagina->ID : wp_insert_post(
+		array(
+			'post_title'  => 'Píldoras de IA productiva',
+			'post_name'   => 'pildoras',
+			'post_type'   => 'page',
+			'post_status' => 'publish',
+		)
+	);
+	if ( $id && ! is_wp_error( $id ) ) {
+		update_option( 'dcj_pagina_pildoras', (int) $id, false );
+	}
+}
+add_action( 'init', 'dcj_asegurar_pildoras' );
+
+/**
+ * Capítulos publicados, opcionalmente de una categoría.
+ *
+ * @param int $term_id Categoría. 0 trae todos.
+ * @return WP_Post[]
+ */
+function dcj_caps_publicados( $term_id = 0 ) {
+	$args = array(
+		'post_type'      => 'dcj_cap',
+		'post_status'    => 'publish',
+		'posts_per_page' => 50,
+		'orderby'        => array(
+			'menu_order' => 'ASC',
+			'date'       => 'ASC',
+		),
+	);
+	if ( $term_id ) {
+		$args['tax_query'] = array(
+			array(
+				'taxonomy' => 'dcj_categoria',
+				'field'    => 'term_id',
+				'terms'    => $term_id,
+			),
+		);
+	}
+	return get_posts( $args );
+}
+
+/**
+ * Tarjeta de un capítulo. Si tiene audio, lo manda al reproductor.
+ *
+ * @param WP_Post $cap Capítulo.
+ * @param int     $n   Número visible.
+ */
+function dcj_tarjeta_pildora( $cap, $n ) {
+	$audio  = (int) get_post_meta( $cap->ID, '_dcj_audio_id', true );
+	$url    = $audio ? wp_get_attachment_url( $audio ) : '';
+	$cats   = get_the_terms( $cap, 'dcj_categoria' );
+	$nombre = ( $cats && ! is_wp_error( $cats ) ) ? $cats[0]->name : '';
+	?>
+	<button class="pildora glass" type="button"<?php echo $url ? ' data-pildora="' . esc_url( $url ) . '"' : ' disabled'; ?>>
+		<span class="pildora__num"><?php echo esc_html( sprintf( '%02d', $n ) ); ?></span>
+		<span class="pildora__cuerpo">
+			<span class="pildora__titulo"><?php echo esc_html( get_the_title( $cap ) ); ?></span>
+			<?php if ( $nombre ) : ?>
+				<span class="pildora__cat"><?php echo esc_html( $nombre ); ?></span>
+			<?php endif; ?>
+		</span>
+	</button>
+	<?php
+}
 
 /**
  * Caja para el audio y el orden del playlist.

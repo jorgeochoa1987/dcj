@@ -62,6 +62,9 @@ $dcj_inicio   = home_url( '/' );
 		</button>
 		<div class="nav__links" id="nav-links">
 			<?php
+			$dcj_pildoras = home_url( '/pildoras/' );
+			$dcj_en_pild  = is_page( 'pildoras' ) ? ' aria-current="page"' : '';
+			printf( '<a href="%s"%s>%s</a>', esc_url( $dcj_pildoras ), $dcj_en_pild, esc_html( 'Píldoras de IA productiva' ) );
 			if ( has_nav_menu( 'principal' ) ) {
 				wp_nav_menu(
 					array(
