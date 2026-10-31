@@ -184,6 +184,54 @@ function dcj_spotify_embed() {
 }
 
 /**
+ * Capítulos públicos del show. Spotify solo embebe el último, así que la lista se lee de la página del programa.
+ *
+ * @return array<int, array{id:string,titulo:string}>
+ */
+function dcj_spotify_episodios() {
+	$cache = get_transient( 'dcj_spotify_episodios' );
+	if ( is_array( $cache ) ) {
+		return $cache;
+	}
+
+	$respuesta = wp_remote_get(
+		'https://open.spotify.com/show/' . dcj_spotify_show(),
+		array(
+			'timeout' => 8,
+			'headers' => array(
+				'User-Agent' => 'Mozilla/5.0 (compatible; DevConJorge/1.0)',
+			),
+		)
+	);
+	$items = array();
+	if ( ! is_wp_error( $respuesta ) && 200 === (int) wp_remote_retrieve_response_code( $respuesta ) ) {
+		$html  = wp_remote_retrieve_body( $respuesta );
+		$vistos = array();
+		if ( preg_match_all( '#href="/episode/([A-Za-z0-9]{22})"[\s\S]{0,600}?data-testid="episodeTitle"[\s\S]{0,300}?>([^<]+)#', $html, $found, PREG_SET_ORDER ) ) {
+			foreach ( $found as $fila ) {
+				$id = $fila[1];
+				if ( isset( $vistos[ $id ] ) ) {
+					continue;
+				}
+				$vistos[ $id ] = true;
+				$titulo        = trim( html_entity_decode( wp_strip_all_tags( $fila[2] ), ENT_QUOTES, 'UTF-8' ) );
+				if ( '' === $titulo ) {
+					continue;
+				}
+				$items[] = array(
+					'id'     => $id,
+					'titulo' => $titulo,
+				);
+			}
+		}
+		$items = array_reverse( $items );
+	}
+
+	set_transient( 'dcj_spotify_episodios', $items, $items ? 30 * MINUTE_IN_SECONDS : 2 * MINUTE_IN_SECONDS );
+	return $items;
+}
+
+/**
  * Audio del encabezado. Sin archivo, la barra no se pinta.
  *
  * @return array{url:string,mime:string,titulo:string}|null
