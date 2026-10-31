@@ -88,7 +88,6 @@
 		var temas = lista ? Array.prototype.slice.call(lista.querySelectorAll('[data-src]')) : [];
 		var actual = 0;
 		var arrastra = false;
-		var topbar = aire.closest('.topbar');
 		var oido = 0;
 		var ultimoTick = 0;
 		var contado = {};
@@ -230,13 +229,6 @@
 				listaBtn.setAttribute('aria-expanded', abrir ? 'true' : 'false');
 			});
 		}
-		function mini() {
-			var pegado = (window.scrollY || 0) > 48;
-			aire.classList.toggle('is-mini', pegado);
-			if (topbar) { topbar.classList.toggle('is-mini', pegado); }
-		}
-		window.addEventListener('scroll', mini, { passive: true });
-		mini();
 		seek.addEventListener('input', function () {
 			arrastra = true;
 			marcar(Number(seek.value));
