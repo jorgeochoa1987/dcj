@@ -48,22 +48,16 @@ $dcj_frame     = $dcj_ultimo
 	: dcj_spotify_embed();
 ?>
 <div class="spotify-dock" data-spotify-dock>
-	<?php if ( $dcj_n ) : ?>
-	<div class="spotify-dock__panel" id="spotify-caps" hidden>
-		<p class="spotify-dock__show"><?php echo esc_html( dcj_programa() ); ?></p>
-		<div class="spotify-dock__grid">
-			<?php foreach ( $dcj_episodios as $dcj_i => $dcj_ep ) : ?>
-				<?php $dcj_src = 'https://open.spotify.com/embed/episode/' . $dcj_ep['id'] . '?utm_source=generator&theme=0'; ?>
-				<button type="button" data-spotify-ep="<?php echo esc_url( $dcj_src ); ?>"<?php echo $dcj_ultimo && $dcj_ep['id'] === $dcj_ultimo['id'] ? ' aria-current="true"' : ''; ?>>
-					<span class="spotify-dock__num"><?php echo esc_html( sprintf( '%02d', $dcj_i + 1 ) ); ?></span>
-					<span class="spotify-dock__titulo"><?php echo esc_html( $dcj_ep['titulo'] ); ?></span>
-				</button>
-			<?php endforeach; ?>
-		</div>
-	</div>
-	<?php endif; ?>
 	<div class="spotify-dock__bar">
 		<?php if ( $dcj_n ) : ?>
+		<div class="spotify-dock__panel" id="spotify-caps" hidden>
+			<div class="spotify-dock__grid">
+				<?php foreach ( $dcj_episodios as $dcj_ep ) : ?>
+					<?php $dcj_src = 'https://open.spotify.com/embed/episode/' . $dcj_ep['id'] . '?utm_source=generator&theme=0'; ?>
+					<button type="button" data-spotify-ep="<?php echo esc_url( $dcj_src ); ?>"<?php echo $dcj_ultimo && $dcj_ep['id'] === $dcj_ultimo['id'] ? ' aria-current="true"' : ''; ?>><?php echo esc_html( $dcj_ep['titulo'] ); ?></button>
+				<?php endforeach; ?>
+			</div>
+		</div>
 		<button class="spotify-dock__caps" type="button" data-spotify-lista aria-expanded="false" aria-controls="spotify-caps"><?php echo esc_html( (string) $dcj_n ); ?> <?php echo 1 === $dcj_n ? 'cap' : 'caps'; ?></button>
 		<?php endif; ?>
 		<iframe data-spotify-frame src="<?php echo esc_url( $dcj_frame ); ?>" title="<?php echo esc_attr( dcj_programa() ); ?>" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
