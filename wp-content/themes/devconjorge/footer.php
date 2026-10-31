@@ -73,7 +73,7 @@ if ( $dcj_primero ) :
 			<li>
 				<button type="button" data-src="<?php echo esc_url( $dcj_cap['url'] ); ?>" data-mime="<?php echo esc_attr( $dcj_cap['mime'] ); ?>" data-titulo="<?php echo esc_attr( $dcj_cap['titulo'] ); ?>"<?php echo 0 === $dcj_i ? ' aria-current="true"' : ''; ?>>
 					<span class="aire__num"><?php echo esc_html( sprintf( '%02d', $dcj_i + 1 ) ); ?></span>
-					<span><?php echo esc_html( $dcj_cap['titulo'] ); ?></span>
+					<span class="aire__cap"><?php echo esc_html( $dcj_cap['titulo'] ); ?></span>
 				</button>
 			</li>
 			<?php endforeach; ?>
