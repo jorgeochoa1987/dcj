@@ -240,16 +240,6 @@
 		seek.addEventListener('change', function () { arrastra = false; });
 	}
 
-	/* ---------- Píldoras: el bloque manda el audio al reproductor ---------- */
-	document.querySelectorAll('[data-pildora]').forEach(function (btn) {
-		btn.addEventListener('click', function () {
-			var src = btn.getAttribute('data-pildora');
-			if (!src || !window.CSS || !CSS.escape) { return; }
-			var item = document.querySelector('[data-aire-caps] [data-src="' + CSS.escape(src) + '"]');
-			if (item) { item.click(); }
-		});
-	});
-
 	/* ---------- El tablero de 0HYPE pasa por más palabras ---------- */
 	var tablero = document.querySelector('[data-palabras]');
 	if (tablero && !reduce) {

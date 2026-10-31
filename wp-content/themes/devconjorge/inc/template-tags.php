@@ -166,6 +166,24 @@ function dcj_programa() {
 }
 
 /**
+ * Show de Spotify de Píldoras.
+ *
+ * @return string
+ */
+function dcj_spotify_show() {
+	return '4m5IO1QQxJeA5FVfD6x6Q2';
+}
+
+/**
+ * Embed oscuro del show.
+ *
+ * @return string
+ */
+function dcj_spotify_embed() {
+	return 'https://open.spotify.com/embed/show/' . dcj_spotify_show() . '?utm_source=generator&theme=0';
+}
+
+/**
  * Audio del encabezado. Sin archivo, la barra no se pinta.
  *
  * @return array{url:string,mime:string,titulo:string}|null
