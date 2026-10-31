@@ -49,7 +49,7 @@ $dcj_frame     = $dcj_ultimo
 ?>
 <div class="spotify-dock" data-spotify-dock>
 	<?php if ( $dcj_n ) : ?>
-	<div class="spotify-dock__panel" id="spotify-caps">
+	<div class="spotify-dock__panel" id="spotify-caps" hidden>
 		<p class="spotify-dock__show"><?php echo esc_html( dcj_programa() ); ?></p>
 		<div class="spotify-dock__grid">
 			<?php foreach ( $dcj_episodios as $dcj_i => $dcj_ep ) : ?>
@@ -64,7 +64,7 @@ $dcj_frame     = $dcj_ultimo
 	<?php endif; ?>
 	<div class="spotify-dock__bar">
 		<?php if ( $dcj_n ) : ?>
-		<button class="spotify-dock__caps" type="button" data-spotify-lista aria-expanded="true" aria-controls="spotify-caps"><?php echo esc_html( (string) $dcj_n ); ?> <?php echo 1 === $dcj_n ? 'cap' : 'caps'; ?></button>
+		<button class="spotify-dock__caps" type="button" data-spotify-lista aria-expanded="false" aria-controls="spotify-caps"><?php echo esc_html( (string) $dcj_n ); ?> <?php echo 1 === $dcj_n ? 'cap' : 'caps'; ?></button>
 		<?php endif; ?>
 		<iframe data-spotify-frame src="<?php echo esc_url( $dcj_frame ); ?>" title="<?php echo esc_attr( dcj_programa() ); ?>" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
 	</div>
@@ -88,10 +88,32 @@ $dcj_frame     = $dcj_ultimo
 			lista.setAttribute('aria-expanded', abierto ? 'false' : 'true');
 		});
 	}
+	function guardar(src) {
+		var id = (String(src).match(/episode\/([A-Za-z0-9]+)/) || [])[1];
+		if (!id) { return; }
+		try { window.localStorage.setItem('dcj_spotify_cap', id); } catch (e) { /* modo privado */ }
+	}
+	function cerrar() {
+		if (!panel || !lista) { return; }
+		panel.hidden = true;
+		lista.setAttribute('aria-expanded', 'false');
+	}
+	var recordado = '';
+	try { recordado = window.localStorage.getItem('dcj_spotify_cap') || ''; } catch (e) { recordado = ''; }
+	if (recordado) {
+		var previo = dock.querySelector('[data-spotify-ep*="' + recordado + '"]');
+		if (previo && frame) {
+			frame.src = previo.getAttribute('data-spotify-ep');
+			marcar(previo);
+		}
+	}
 	botones.forEach(function (btn) {
 		btn.addEventListener('click', function () {
-			if (frame) { frame.src = btn.getAttribute('data-spotify-ep'); }
+			var src = btn.getAttribute('data-spotify-ep');
+			if (frame) { frame.src = src; }
+			guardar(src);
 			marcar(btn);
+			cerrar();
 		});
 	});
 	document.querySelectorAll('[data-episodio]').forEach(function (btn) {
