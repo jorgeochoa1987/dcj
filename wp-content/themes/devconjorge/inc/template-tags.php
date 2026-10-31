@@ -156,6 +156,16 @@ function dcj_poster_post( $hook = '' ) {
 }
 
 /**
+ * Nombre del programa en la barra.
+ *
+ * @return string
+ */
+function dcj_programa() {
+	$nombre = trim( (string) get_theme_mod( 'dcj_programa', 'Píldoras de IA productiva' ) );
+	return '' !== $nombre ? $nombre : 'Píldoras de IA productiva';
+}
+
+/**
  * Audio del encabezado. Sin archivo, la barra no se pinta.
  *
  * @return array{url:string,mime:string,titulo:string}|null

@@ -49,10 +49,11 @@ $dcj_inicio   = home_url( '/' );
 $dcj_caps    = dcj_playlist();
 $dcj_primero = $dcj_caps ? $dcj_caps[0] : null;
 $dcj_n_caps  = count( $dcj_caps );
+$dcj_show    = dcj_programa();
 ?>
 <header class="topbar">
 	<?php if ( $dcj_primero ) : ?>
-	<div class="aire glass" data-aire>
+	<div class="aire glass" data-aire aria-label="<?php echo esc_attr( $dcj_show ); ?>">
 		<button class="aire__play" type="button" data-aire-play aria-label="Reproducir">
 			<svg class="aire__ico aire__ico--play" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
 			<svg class="aire__ico aire__ico--pause" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
@@ -60,7 +61,7 @@ $dcj_n_caps  = count( $dcj_caps );
 		<div class="aire__meta">
 			<p class="aire__kicker">
 				<span class="aire__eq" aria-hidden="true"><span></span><span></span><span></span></span>
-				En el aire
+				<?php echo esc_html( $dcj_show ); ?>
 			</p>
 			<p class="aire__titulo" data-aire-titulo><?php echo esc_html( $dcj_primero['titulo'] ); ?></p>
 		</div>
@@ -73,6 +74,7 @@ $dcj_n_caps  = count( $dcj_caps );
 			<?php echo esc_html( (string) $dcj_n_caps ); ?> <?php echo 1 === $dcj_n_caps ? 'cap' : 'caps'; ?>
 		</button>
 		<ol class="aire__lista glass" id="aire-lista" data-aire-caps hidden>
+			<li class="aire__show"><?php echo esc_html( $dcj_show ); ?></li>
 			<?php foreach ( $dcj_caps as $dcj_i => $dcj_cap ) : ?>
 			<li>
 				<button type="button" data-src="<?php echo esc_url( $dcj_cap['url'] ); ?>" data-mime="<?php echo esc_attr( $dcj_cap['mime'] ); ?>" data-titulo="<?php echo esc_attr( $dcj_cap['titulo'] ); ?>"<?php echo 0 === $dcj_i ? ' aria-current="true"' : ''; ?>>

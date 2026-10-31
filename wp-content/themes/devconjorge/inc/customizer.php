@@ -108,6 +108,21 @@ function dcj_customize_register( $wp_customize ) {
 		)
 	);
 	$wp_customize->add_setting(
+		'dcj_programa',
+		array(
+			'default'           => 'Píldoras de IA productiva',
+			'sanitize_callback' => 'sanitize_text_field',
+		)
+	);
+	$wp_customize->add_control(
+		'dcj_programa',
+		array(
+			'label'   => 'Nombre del programa',
+			'section' => 'dcj_audio',
+			'type'    => 'text',
+		)
+	);
+	$wp_customize->add_setting(
 		'dcj_audio_id',
 		array(
 			'default'           => 0,
