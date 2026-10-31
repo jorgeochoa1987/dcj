@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DCJ_VERSION', '1.18.0' );
+define( 'DCJ_VERSION', '1.19.0' );
 define( 'DCJ_DIR', get_template_directory() );
 define( 'DCJ_URI', get_template_directory_uri() );
 

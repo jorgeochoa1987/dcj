@@ -29,7 +29,7 @@
 @property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: clip; }
 body {
 	margin: 0;
 	background: var(--fondo);
@@ -37,7 +37,7 @@ body {
 	font-family: var(--texto);
 	font-size: 17px;
 	line-height: 1.55;
-	overflow-x: hidden;
+	overflow-x: clip;
 	-webkit-font-smoothing: antialiased;
 }
 img, iframe { max-width: 100%; display: block; }
@@ -405,8 +405,11 @@ body:has(.spotify-dock) { padding-bottom: 186px; }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
 @media (max-width: 1100px) { .reels__nav { right: 12px; top: auto; bottom: 120px; transform: none; display: none; } }
 @media (max-width: 640px) {
+	.liquid { filter: none; }
+	.blob { animation: none; }
 	.reels-section { gap: 32px; }
-	.reels { flex-basis: 100%; }
+	.reels { flex-basis: 100%; overflow: hidden; }
+	.reels__glow { width: 260px; height: 260px; margin-left: -130px; }
 	.reels__device { width: 100%; max-height: 86vh; border-radius: 36px; }
 	.reels__feed { border-radius: 30px; }
 	.siguiente { display: none; }
