@@ -300,7 +300,10 @@ body:has(.aire-dock) { padding-bottom: 92px; }
 .wa-pegado svg { color: var(--sobre-lima); }
 .wa-pegado.is-on { transform: none; visibility: visible; pointer-events: auto; }
 .wa-pegado:hover { color: var(--sobre-lima); background: var(--lima-claro); }
-@media (max-width: 640px) { .wa-pegado { top: auto; bottom: 96px; } }
+@media (max-width: 640px) {
+	.wa-pegado { top: 50%; bottom: auto; transform: translate(140%, -50%); }
+	.wa-pegado.is-on { transform: translateY(-50%); }
+}
 .live { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: 1.2px; color: var(--lima); }
 .bitacora-hero .live { margin: 0; padding: 8px 14px; border-radius: 999px; font-size: 12px; color: var(--tinta); align-self: flex-start; }
 .pulse { width: 8px; height: 8px; border-radius: 999px; background: var(--lima); animation: pulse 2s ease-in-out infinite; }
