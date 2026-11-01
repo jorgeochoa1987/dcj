@@ -13,6 +13,12 @@
 			var open = nav.classList.toggle('is-open');
 			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 		});
+		function aplastar() { toggle.classList.add('is-pressed'); }
+		function soltar() { toggle.classList.remove('is-pressed'); }
+		toggle.addEventListener('pointerdown', aplastar);
+		toggle.addEventListener('pointerup', soltar);
+		toggle.addEventListener('pointercancel', soltar);
+		toggle.addEventListener('pointerleave', soltar);
 		nav.querySelectorAll('.nav__links a').forEach(function (a) {
 			a.addEventListener('click', function () {
 				nav.classList.remove('is-open');
