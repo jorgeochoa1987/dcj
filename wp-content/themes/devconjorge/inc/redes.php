@@ -43,6 +43,13 @@ function dcj_redes_base() {
 			'unidad' => 'seguidores',
 			'accion' => 'Seguir',
 		),
+		'linkedin'  => array(
+			'nombre' => 'LinkedIn',
+			'url'    => 'https://www.linkedin.com/in/jorge-eduardo-ochoa-buitrago/',
+			'cifra'  => 0,
+			'unidad' => 'seguidores',
+			'accion' => 'Seguir',
+		),
 		'whatsapp'  => array(
 			'nombre' => 'WhatsApp',
 			'url'    => 'https://devconjorge.com/wp',
@@ -124,6 +131,7 @@ function dcj_icono( $clave, $size = 22 ) {
 		'tiktok'    => '<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.2 4.2 5 4.4"/>',
 		'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/>',
 		'facebook'  => '<path d="M14 21v-8h3l.5-3.5H14V7.8c0-1 .3-1.8 1.8-1.8h1.8V3h-2.7C11.9 3 10.5 4.7 10.5 7.4v2.1H8V13h2.5v8"/>',
+		'linkedin'  => '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
 		'whatsapp'  => '<path d="M4 20l1.3-4A8 8 0 1 1 8.4 19z"/><path d="M9.5 9.5c.3 2 2 3.7 4 4l1-1.2 1.8.8-.4 1.6c-3.4 0-6.6-3.2-6.6-6.6l1.6-.4.8 1.8z"/>',
 		'twitch'    => '<path d="M4 3h16v11l-5 5h-4l-3 3v-3H4z"/><path d="M11 8v4M15 8v4"/>',
 		'flecha'    => '<path d="M5 12h14M13 6l6 6-6 6"/>',
