@@ -51,14 +51,21 @@ $dcj_frame     = $dcj_ultimo
 	<div class="spotify-dock__bar">
 		<?php if ( $dcj_n ) : ?>
 		<div class="spotify-dock__panel" id="spotify-caps" hidden>
+			<p class="spotify-dock__kicker">Reproducción</p>
 			<div class="spotify-dock__grid">
 				<?php foreach ( $dcj_episodios as $dcj_ep ) : ?>
 					<?php $dcj_src = 'https://open.spotify.com/embed/episode/' . $dcj_ep['id'] . '?utm_source=generator&theme=0'; ?>
-					<button type="button" data-spotify-ep="<?php echo esc_url( $dcj_src ); ?>"<?php echo $dcj_ultimo && $dcj_ep['id'] === $dcj_ultimo['id'] ? ' aria-current="true"' : ''; ?>><?php echo esc_html( $dcj_ep['titulo'] ); ?></button>
+					<button type="button" data-spotify-ep="<?php echo esc_url( $dcj_src ); ?>"<?php echo $dcj_ultimo && $dcj_ep['id'] === $dcj_ultimo['id'] ? ' aria-current="true"' : ''; ?>>
+						<span class="spotify-dock__mark" aria-hidden="true">
+							<svg class="spotify-dock__tri" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 1.2v5.6L6.8 4z" fill="currentColor"/></svg>
+							<span class="spotify-dock__bars"><i></i><i></i><i></i></span>
+						</span>
+						<span class="spotify-dock__titulo"><?php echo esc_html( $dcj_ep['titulo'] ); ?></span>
+					</button>
 				<?php endforeach; ?>
 			</div>
 		</div>
-		<button class="spotify-dock__caps" type="button" data-spotify-lista aria-expanded="false" aria-controls="spotify-caps"><?php echo esc_html( (string) $dcj_n ); ?> <?php echo 1 === $dcj_n ? 'cap' : 'caps'; ?></button>
+		<button class="spotify-dock__caps" type="button" data-spotify-lista aria-expanded="false" aria-controls="spotify-caps">Reproducción</button>
 		<?php endif; ?>
 		<iframe data-spotify-frame src="<?php echo esc_url( $dcj_frame ); ?>" title="<?php echo esc_attr( dcj_programa() ); ?>" height="152" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
 	</div>
