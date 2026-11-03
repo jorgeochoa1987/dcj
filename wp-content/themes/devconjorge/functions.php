@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DCJ_VERSION', '1.20.0' );
+define( 'DCJ_VERSION', '1.21.0' );
 define( 'DCJ_DIR', get_template_directory() );
 define( 'DCJ_URI', get_template_directory_uri() );
 
@@ -83,6 +83,7 @@ add_action( 'wp_enqueue_scripts', 'dcj_assets' );
  */
 function dcj_resource_hints( $urls, $relation_type ) {
 	if ( 'preconnect' === $relation_type ) {
+		$urls[] = array( 'href' => 'https://fonts.googleapis.com', 'crossorigin' );
 		$urls[] = array( 'href' => 'https://fonts.gstatic.com', 'crossorigin' );
 		$urls[] = 'https://i.ytimg.com';
 		$urls[] = 'https://www.youtube-nocookie.com';
