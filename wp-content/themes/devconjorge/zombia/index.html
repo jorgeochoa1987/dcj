@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Zombia</title>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -51,14 +51,32 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 .hint{margin-top:1.4cqw;color:#aab6e0;font-size:1.3cqw}
 #inv h2{font-size:3.4cqw;margin-bottom:.5cqw}#inv .panel{padding:1cqw 3cqw 1.2cqw}#inv .btn.sm{margin-top:.7cqw;font-size:2cqw}#inv .hint{margin-top:.8cqw;font-size:1.15cqw}
 #touch{display:none;position:absolute;inset:0;z-index:4;pointer-events:none}
-.tb{position:absolute;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;width:9cqw;height:9cqw;border-radius:50%;border:.3cqw solid rgba(255,255,255,.75);background:rgba(8,11,24,.45);color:#fff;font:800 1.25cqw Rubik,sans-serif;display:flex;align-items:center;justify-content:center;padding:0}
-.tb[data-k=l],.tb[data-k=r],.tb[data-k=u],.tb[data-k=d]{font-size:3.6cqw}
-.tb.big{width:11.5cqw;height:11.5cqw;font-size:1.6cqw;background:rgba(255,210,63,.3);border-color:#ffd23f}
-.tb.sm{width:8cqw;height:4cqw;border-radius:1.2cqw;font-size:1.05cqw}
-.tb.dn{background:rgba(255,255,255,.45);transform:scale(.94)}
+.touch__move,.touch__act,.touch__meta{position:absolute;display:flex;gap:10px;pointer-events:none}
+.touch__move{left:max(12px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-areas:" . u . " "l d r";gap:10px}
+.touch__act{right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-areas:"use ab" "jump atk";gap:12px}
+.touch__meta{left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));gap:8px}
+.tb{pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(8,11,24,.55);color:#fff;font:800 12px/1.05 Rubik,sans-serif;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center}
+.tb[data-k=u]{grid-area:u}.tb[data-k=l]{grid-area:l}.tb[data-k=d]{grid-area:d}.tb[data-k=r]{grid-area:r}
+.tb[data-k=use]{grid-area:use}.tb[data-k=ab]{grid-area:ab}.tb[data-k=jump]{grid-area:jump}.tb[data-k=atk]{grid-area:atk}
+.tb[data-k=l],.tb[data-k=r],.tb[data-k=u],.tb[data-k=d]{font-size:22px}
+.tb.big{width:78px;height:78px;font-size:13px;background:rgba(255,210,63,.34);border-color:#ffd23f}
+.tb.sm{width:auto;height:42px;padding:0 14px;border-radius:14px;font-size:12px;letter-spacing:.04em}
+.tb.dn{background:rgba(255,255,255,.5);transform:scale(.94)}
+@media (max-height:460px){
+	.tb{width:54px;height:54px}
+	.tb.big{width:66px;height:66px}
+	.touch__move,.touch__act{gap:8px}
+}
+@media (min-width:700px) and (pointer:coarse){
+	.tb{width:76px;height:76px;font-size:14px}
+	.tb[data-k=l],.tb[data-k=r],.tb[data-k=u],.tb[data-k=d]{font-size:26px}
+	.tb.big{width:92px;height:92px;font-size:15px}
+	.tb.sm{height:48px;font-size:14px}
+}
 #rot{display:none;position:fixed;left:0;right:0;bottom:8vh;text-align:center;font:600 4vw Rubik,sans-serif;color:#ffd23f;z-index:9}
 @media (orientation:portrait){body.touch #rot{display:block}}
 body.touch{touch-action:none}
+body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
 .slot.sel{border-color:#ffd23f;box-shadow:0 0 0 .3cqw #ffd23f}
 #menuBtn{position:absolute;top:1.3cqw;right:1.2cqw;z-index:4;display:none;font:800 1.3cqw Rubik,sans-serif;letter-spacing:.08em;padding:.6cqw 1.1cqw;border-radius:1cqw;border:.25cqw solid #101629;background:#ffd23f;color:#101629;cursor:pointer;box-shadow:0 .35cqw 0 #c8961a}
 .col{display:flex;flex-direction:column;align-items:center}
@@ -115,17 +133,23 @@ body.touch{touch-action:none}
 
 <button id="menuBtn">MENÚ</button>
 <div id="touch">
-  <button class="tb" data-k="l" style="left:1.5cqw;bottom:3cqw">◀</button>
-  <button class="tb" data-k="d" style="left:11.5cqw;bottom:3cqw">▼</button>
-  <button class="tb" data-k="r" style="left:21.5cqw;bottom:3cqw">▶</button>
-  <button class="tb" data-k="u" style="left:11.5cqw;bottom:13cqw">▲</button>
-  <button class="tb big" data-k="atk" style="right:1.5cqw;bottom:3cqw">GOLPE</button>
-  <button class="tb big" data-k="jump" style="right:14cqw;bottom:3cqw">SALTO</button>
-  <button class="tb" data-k="ab" style="right:2.5cqw;bottom:15.5cqw">PODER</button>
-  <button class="tb" data-k="use" style="right:15cqw;bottom:15.5cqw">ENTRAR</button>
-  <button class="tb sm" data-k="inv" style="right:1.2cqw;top:7.5cqw">MOCHILA</button>
-  <button class="tb sm" data-k="swap" style="right:1.2cqw;top:12.5cqw">HÉROE</button>
-  <button class="tb sm" data-k="map" style="right:1.2cqw;top:17.5cqw">MAPA</button>
+  <div class="touch__meta">
+    <button class="tb sm" data-k="inv" type="button">Mochila</button>
+    <button class="tb sm" data-k="swap" type="button">Héroe</button>
+    <button class="tb sm" data-k="map" type="button">Mapa</button>
+  </div>
+  <div class="touch__move">
+    <button class="tb" data-k="u" type="button">▲</button>
+    <button class="tb" data-k="l" type="button">◀</button>
+    <button class="tb" data-k="d" type="button">▼</button>
+    <button class="tb" data-k="r" type="button">▶</button>
+  </div>
+  <div class="touch__act">
+    <button class="tb" data-k="use" type="button">Entrar</button>
+    <button class="tb" data-k="ab" type="button">Poder</button>
+    <button class="tb big" data-k="jump" type="button">Salto</button>
+    <button class="tb big" data-k="atk" type="button">Golpe</button>
+  </div>
 </div>
 <div id="rot">Gira el dispositivo para jugar en horizontal</div>
 <div id="pause" class="ov">
