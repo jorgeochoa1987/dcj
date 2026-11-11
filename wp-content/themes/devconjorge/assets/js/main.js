@@ -27,10 +27,19 @@
 		});
 	}
 
-	/* ---------- Zombia a pantalla completa ---------- */
+	/* ---------- Zombia: el menú y Spotify no tapan el juego ---------- */
 	var juego = document.querySelector('.hero__game');
 	var abrirJuego = document.querySelector('[data-zombia-full]');
+	var hero = document.querySelector('.hero');
+	if (hero && 'IntersectionObserver' in window) {
+		var juegoVista = new IntersectionObserver(function (entries) {
+			document.body.classList.toggle('juego-en-vista', entries[0].isIntersecting);
+		}, { threshold: 0.2 });
+		juegoVista.observe(hero);
+	}
 	if (juego && abrirJuego) {
+		var marcaJuego = document.createElement('span');
+		marcaJuego.hidden = true;
 		function juegoAbierto() { return juego.classList.contains('is-full'); }
 		function pintarJuego() {
 			abrirJuego.textContent = juegoAbierto() ? 'Cerrar' : 'Pantalla completa';
@@ -39,20 +48,21 @@
 		}
 		function salirJuego() {
 			juego.classList.remove('is-full');
+			if (marcaJuego.parentNode) {
+				marcaJuego.parentNode.insertBefore(juego, marcaJuego);
+				marcaJuego.remove();
+			}
 			pintarJuego();
-			if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen().catch(function () {}); }
 		}
 		abrirJuego.addEventListener('click', function () {
 			if (juegoAbierto()) { salirJuego(); return; }
+			juego.parentNode.insertBefore(marcaJuego, juego);
+			document.body.appendChild(juego);
 			juego.classList.add('is-full');
 			pintarJuego();
-			if (juego.requestFullscreen) { juego.requestFullscreen().catch(function () {}); }
 		});
 		document.addEventListener('keydown', function (e) {
 			if (e.key === 'Escape' && juegoAbierto()) { salirJuego(); }
-		});
-		document.addEventListener('fullscreenchange', function () {
-			if (!document.fullscreenElement && juegoAbierto()) { salirJuego(); }
 		});
 	}
 

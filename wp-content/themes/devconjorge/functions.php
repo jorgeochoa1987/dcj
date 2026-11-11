@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DCJ_VERSION', '1.24.0' );
+define( 'DCJ_VERSION', '1.25.0' );
 define( 'DCJ_DIR', get_template_directory() );
 define( 'DCJ_URI', get_template_directory_uri() );
 
@@ -73,6 +73,20 @@ function dcj_assets() {
 	);
 }
 add_action( 'wp_enqueue_scripts', 'dcj_assets' );
+
+/**
+ * En la portada el juego está a la vista: el menú no se pega y Spotify se aparta.
+ *
+ * @param string[] $classes Clases del body.
+ * @return string[]
+ */
+function dcj_body_juego( $classes ) {
+	if ( is_front_page() ) {
+		$classes[] = 'juego-en-vista';
+	}
+	return $classes;
+}
+add_filter( 'body_class', 'dcj_body_juego' );
 
 /**
  * Preconectar con Google Fonts y YouTube.
