@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'DCJ_VERSION', '1.25.0' );
+define( 'DCJ_VERSION', '1.26.0' );
 define( 'DCJ_DIR', get_template_directory() );
 define( 'DCJ_URI', get_template_directory_uri() );
 
@@ -75,18 +75,41 @@ function dcj_assets() {
 add_action( 'wp_enqueue_scripts', 'dcj_assets' );
 
 /**
- * En la portada el juego está a la vista: el menú no se pega y Spotify se aparta.
+ * La sala de Zombia no lleva el menú ni el reproductor encima.
  *
  * @param string[] $classes Clases del body.
  * @return string[]
  */
-function dcj_body_juego( $classes ) {
-	if ( is_front_page() ) {
-		$classes[] = 'juego-en-vista';
+function dcj_body_zombia( $classes ) {
+	if ( is_page( 'zombia' ) ) {
+		$classes[] = 'zombia-sala';
 	}
 	return $classes;
 }
-add_filter( 'body_class', 'dcj_body_juego' );
+add_filter( 'body_class', 'dcj_body_zombia' );
+
+/**
+ * Crea /zombia/ si todavía no existe.
+ */
+function dcj_asegurar_zombia() {
+	$guardada = (int) get_option( 'dcj_pagina_zombia' );
+	if ( $guardada && 'publish' === get_post_status( $guardada ) ) {
+		return;
+	}
+	$pagina = get_page_by_path( 'zombia' );
+	$id     = $pagina ? (int) $pagina->ID : wp_insert_post(
+		array(
+			'post_title'  => 'Zombia',
+			'post_name'   => 'zombia',
+			'post_type'   => 'page',
+			'post_status' => 'publish',
+		)
+	);
+	if ( $id && ! is_wp_error( $id ) ) {
+		update_option( 'dcj_pagina_zombia', (int) $id, false );
+	}
+}
+add_action( 'init', 'dcj_asegurar_zombia' );
 
 /**
  * Preconectar con Google Fonts y YouTube.

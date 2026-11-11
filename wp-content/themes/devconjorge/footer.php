@@ -12,6 +12,7 @@ $dcj_bitacora = get_option( 'page_for_posts' ) ? get_permalink( get_option( 'pag
 ?>
 </main>
 
+<?php if ( ! is_page( 'zombia' ) ) : ?>
 <footer class="footer">
 	<div class="wrap footer__inner">
 		<div class="footer__top">
@@ -129,6 +130,7 @@ $dcj_frame     = $dcj_ultimo
 	});
 })();
 </script>
+<?php endif; ?>
 <?php wp_footer(); ?>
 </body>
 </html>
