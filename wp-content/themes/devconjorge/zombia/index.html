@@ -55,13 +55,14 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 .touch__move{left:max(12px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-areas:" . u . " "l d r";gap:10px}
 .touch__act{right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-areas:"use ab" "jump atk";gap:12px}
 .touch__meta{left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);gap:6px}
-.tb{pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(8,11,24,.55);color:#fff;font:800 12px/1.05 Rubik,sans-serif;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center}
+.tb{position:relative;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(8,11,24,.55);color:#fff;font:800 12px/1.05 Rubik,sans-serif;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center}
 .tb[data-k=u]{grid-area:u}.tb[data-k=l]{grid-area:l}.tb[data-k=d]{grid-area:d}.tb[data-k=r]{grid-area:r}
 .tb[data-k=use]{grid-area:use}.tb[data-k=ab]{grid-area:ab}.tb[data-k=jump]{grid-area:jump}.tb[data-k=atk]{grid-area:atk}
 .tb[data-k=l],.tb[data-k=r],.tb[data-k=u],.tb[data-k=d]{font-size:22px}
 .tb.big{width:78px;height:78px;font-size:13px;background:rgba(255,210,63,.34);border-color:#ffd23f}
 .tb.sm{width:auto;height:42px;padding:0 14px;border-radius:14px;font-size:12px;letter-spacing:.04em}
-.tb.dn{background:rgba(255,255,255,.5);transform:scale(.94)}
+.tb::after{content:"";position:absolute;inset:-12px}
+.tb.dn{background:rgba(255,255,255,.55)}
 @media (max-height:520px){
 	.tb{width:48px;height:48px}
 	.tb.big{width:58px;height:58px;font-size:11px}
@@ -333,9 +334,20 @@ cv.addEventListener('mousedown',()=>{if(scene==='play'&&!paused&&!TOUCH)press.at
 let TOUCH=false;function enableTouch(){if(TOUCH)return;TOUCH=true;document.body.classList.add('touch');}
 if(matchMedia('(pointer:coarse)').matches||'ontouchstart' in window||navigator.maxTouchPoints>0)enableTouch();
 addEventListener('touchstart',enableTouch,{passive:true});
-for(const b of document.querySelectorAll('#touch [data-k]')){const k=b.dataset.k,up=e=>{e.preventDefault();keys[k]=false;b.classList.remove('dn');};
- b.addEventListener('pointerdown',e=>{e.preventDefault();enableTouch();try{b.setPointerCapture(e.pointerId);}catch(x){}b.classList.add('dn');keyDown(k,false);if(k==='inv'||k==='swap'||k==='map')keys[k]=false;});
- b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('contextmenu',e=>e.preventDefault());}
+const fingers=new Map();
+function fingerBtn(t){const el=document.elementFromPoint(t.clientX,t.clientY);return el&&el.closest?el.closest('#touch [data-k]'):null;}
+function dropHeld(b){if(!b||[...fingers.values()].includes(b))return;keys[b.dataset.k]=false;b.classList.remove('dn');}
+function holdBtn(b){b.classList.add('dn');keyDown(b.dataset.k,false);if(b.dataset.k==='inv'||b.dataset.k==='swap'||b.dataset.k==='map')keys[b.dataset.k]=false;}
+function moveFinger(id,b){const prev=fingers.has(id)?fingers.get(id):undefined;if(prev===b)return;fingers.set(id,b);dropHeld(prev);if(b)holdBtn(b);}
+function endFinger(id){const prev=fingers.get(id);fingers.delete(id);dropHeld(prev);}
+function releaseTouch(){fingers.clear();document.querySelectorAll('#touch [data-k]').forEach(b=>{keys[b.dataset.k]=false;b.classList.remove('dn');});}
+document.addEventListener('touchstart',e=>{let hit=false;for(const t of e.changedTouches){const b=fingerBtn(t);if(!b)continue;hit=true;enableTouch();moveFinger(t.identifier,b);}if(hit)e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{let hit=false;for(const t of e.changedTouches){if(!fingers.has(t.identifier))continue;hit=true;moveFinger(t.identifier,fingerBtn(t));}if(hit)e.preventDefault();},{passive:false});
+function endTouches(e){for(const t of e.changedTouches)endFinger(t.identifier);if(!e.touches.length)releaseTouch();}
+document.addEventListener('touchend',endTouches,{passive:false});
+document.addEventListener('touchcancel',endTouches,{passive:false});
+addEventListener('blur',releaseTouch);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouch();});
 function say(s,t=2.2){toast=s;toastT=t;}
 
 /* ---------- sonido ---------- */
