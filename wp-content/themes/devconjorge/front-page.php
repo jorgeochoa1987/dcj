@@ -12,7 +12,6 @@ get_header();
 $dcj_redes    = dcj_redes();
 $dcj_total    = dcj_total_seguidores();
 $dcj_videos   = dcj_youtube_videos( (int) get_theme_mod( 'dcj_feed_total', 8 ) );
-$dcj_ultimo   = $dcj_videos[0] ?? null;
 $dcj_bitacora = get_option( 'page_for_posts' ) ? get_permalink( get_option( 'page_for_posts' ) ) : home_url( '/bitacora/' );
 $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['suscrito'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 ?>
@@ -56,29 +55,8 @@ $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['su
 	<div class="hero__stage">
 		<span class="blob blob--lima liquid" aria-hidden="true"></span>
 		<span class="blob blob--coral" aria-hidden="true"></span>
-
-		<?php if ( $dcj_ultimo ) : ?>
-			<a class="phone glass float ring shine" href="#videos" data-abrir-reel="0">
-				<img class="phone__bg" src="<?php echo esc_url( dcj_miniatura( $dcj_ultimo['id'] ) ); ?>" alt="" onerror="this.onerror=null;this.src='<?php echo esc_url( dcj_miniatura( $dcj_ultimo['id'], 'hqdefault' ) ); ?>'">
-				<span class="phone__top">
-					<span class="chip chip--lima">ÚLTIMO SHORT</span>
-					<span class="mono small"><?php echo esc_html( dcj_fecha_corta( $dcj_ultimo['fecha'] ) ); ?></span>
-				</span>
-				<span class="phone__hook"><?php echo esc_html( $dcj_ultimo['hook'] ); ?></span>
-				<span class="phone__bottom">
-					<span class="bar"><span></span></span>
-					<span class="btn btn--dark btn--block">Verlo ahora</span>
-				</span>
-			</a>
-		<?php endif; ?>
-
-		<div class="chip-float glass float" style="--delay:-3s">
-			<span class="chip-float__icon"><?php dcj_el_icono( 'doc', 18 ); ?></span>
-			<span>Artículo en la bitácora<br><span class="muted">desde cada video</span></span>
-		</div>
-		<div class="chip-float chip-float--b glass float" style="--delay:-5s">
-			<span class="eyebrow eyebrow--coral">¿TÚ QUÉ HARÍAS?</span>
-			<span>Comenta y lo respondo mañana</span>
+		<div class="hero__game glass">
+			<iframe src="<?php echo esc_url( DCJ_URI . '/zombia/index.html?v=' . DCJ_VERSION ); ?>" title="Zombia, el juego de la comunidad" allow="autoplay; fullscreen"></iframe>
 		</div>
 	</div>
 </section>

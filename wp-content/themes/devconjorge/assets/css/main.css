@@ -263,7 +263,9 @@ body:has(.spotify-dock) { padding-bottom: 186px; }
 .dock__txt { padding: 0 14px 0 8px; font-size: 13px; color: var(--tinta-suave); }
 .dock__txt .mono { color: var(--tinta); }
 
-.hero__stage { flex: 1 1 420px; min-width: 0; position: relative; height: 640px; display: flex; align-items: center; justify-content: center; }
+.hero__stage { flex: 1 1 480px; min-width: 0; position: relative; height: auto; display: flex; align-items: center; justify-content: center; }
+.hero__game { position: relative; z-index: 1; width: 100%; aspect-ratio: 16 / 9; border-radius: 28px; overflow: hidden; background: #07090f; }
+.hero__game iframe { width: 100%; height: 100%; border: 0; display: block; }
 .phone { position: relative; width: 300px; height: 533px; border-radius: 40px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; color: var(--tinta); overflow: hidden; }
 .phone:hover { color: var(--tinta); }
 .phone__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: .55; }
