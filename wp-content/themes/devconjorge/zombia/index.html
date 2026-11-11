@@ -226,6 +226,15 @@ const SPR={zombie:{img:'z',cw:300,ch:160,cols:6,A:ZA,sc:.56,w:40,h:78,dur:.5,tri
  chick:{img:'q',cw:302,ch:110,cols:5,A:{walk:[0,1,2,3],hurt:[4],atk:[5,6,7,8],dead:[9,10,11,12]},sc:.62,w:40,h:44,dur:.5,trig:44,reach:54},
  spitter:{img:'f',cw:230,ch:155,cols:5,A:{walk:[0,1,2,3],hurt:[4],atk:[5,6],dead:[7,8,9]},sc:.66,w:56,h:92,dur:.7,trig:430,reach:0,ranged:true}};
 const RUNW={a:114,b:128,c:124};
+const BODY={a:150,b:150,c:150};
+const POSEH={
+ a:[150,151,123,122,125,122,119,134,125,94,141,156,157,119,63],
+ b:[150,150,99,97,97,92,89,101,83,76,108,100,109,110,89,42],
+ c:[150,150,110,115,108,107,101,106,121,121,90,111,111,110,92,108,90,53]};
+const RUNH={
+ a:[135,129,134,141,138,133,134,134],
+ b:[132,134,129,130,130,129,130,131],
+ c:[135,129,134,142,134,130,133,127]};
 const TREES=[['tree1','birch','tree2','pine','tree3','tree4'],['willow','cypress','pine','willow','pine2'],['orange','tree1','orange','birch','tree4']];
 const CL=[['#ffffff','rgba(90,150,220,.35)'],['#d8f0d0','rgba(20,60,45,.4)'],['#fff1dc','rgba(200,80,60,.35)'],['#6c68a8','rgba(8,8,28,.45)'],['#c44be8','rgba(20,0,30,.5)']];
 function drawN(n,x,y,sc=1){const r=N[n];if(!IMG.n.complete)return;g.drawImage(IMG.n,r[0],r[1],r[2],r[3],x-r[2]*sc/2,y-r[3]*sc,r[2]*sc,r[3]*sc);}
@@ -774,12 +783,13 @@ function drawPlayer(){const A=META.anim[hero.id];let f;const pr=1-P.atkT/P.atkD;
  else if(P.crouch)f=A.crouch[0];else if(Math.abs(P.vx)>30)f=-1;else f=A.idle[0];
  const x=P.x-cam,y=P.y-13+(P.climb?Math.sin(P.y*.2)*2:0),bl=P.inv_t>0&&!P.dead&&Math.floor(time*20)%2?.45:1,fc=P.climb?1:P.face;
  shadow(x,(groundAt(P.x,P.y,H)||GY)-14,24);
- P.sq=(P.sq||0)*.82;let sy=1-P.sq,rot=0,run=f===-1;
+ let rot=0,run=f===-1;
  if(run)rot=.03;
- else if(!P.on&&!P.climb&&!P.dead){sy*=1+clamp(-P.vy/9000,-.05,.07);rot=clamp(P.vx/250,-1,1)*P.face*.06;}
- else if(f===A.idle[0])sy*=1+.012*Math.sin(time*3.2);
- g.save();g.translate(x,y);g.rotate(rot*fc);g.scale(1/Math.sqrt(sy),sy);
- if(run&&IMG['r'+hero.id].complete)drawSpr('r'+hero.id,Math.floor(P.run)%8,0,0,fc,.64,bl,RUNW[hero.id],148,8);else drawSpr(hero.id,run?A.run[0]:f,0,0,fc,.62,bl);
+ else if(!P.on&&!P.climb&&!P.dead)rot=clamp(P.vx/250,-1,1)*P.face*.06;
+ g.save();g.translate(x,y);g.rotate(rot*fc);
+ const fit=h=>.62*BODY[hero.id]/(h||BODY[hero.id]);
+ if(run&&IMG['r'+hero.id].complete){const fr=Math.floor(P.run)%8;drawSpr('r'+hero.id,fr,0,0,fc,fit(RUNH[hero.id][fr]),bl,RUNW[hero.id],148,8);}
+ else{const fr=run?A.run[0]:f,same=A.crouch.indexOf(fr)>=0||A.dead.indexOf(fr)>=0;drawSpr(hero.id,fr,0,0,fc,same?.62:fit(POSEH[hero.id][fr]),bl);}
  g.restore();
  if(P.atkT>0&&!P.dead){g.save();g.translate(x+P.face*26,y-(P.crouch?26:50));g.scale(P.face,1);
   if(P.swing&&ITEMS[P.swing]&&ITEMS[P.swing].type==='melee'){g.rotate(-1.2+pr*2.2);g.drawImage(icon(P.swing),-6,-44,50,50);}
