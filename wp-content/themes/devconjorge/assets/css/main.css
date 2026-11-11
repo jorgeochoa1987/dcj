@@ -273,7 +273,7 @@ body.zombia-sala .ambient,
 body.zombia-sala .wa-pegado { display: none; }
 .zombia-sala { position: fixed; inset: 0; z-index: 30; background: #07090f; }
 .zombia-sala iframe { width: 100%; height: 100%; border: 0; display: block; }
-.zombia-sala__volver { position: absolute; z-index: 2; top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); height: 40px; padding: 0 14px; border-radius: 999px; background: var(--lima); color: var(--sobre-lima); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; }
+.zombia-sala__volver { position: absolute; z-index: 2; top: max(54px, calc(env(safe-area-inset-top) + 46px)); right: max(8px, env(safe-area-inset-right)); left: auto; height: 32px; padding: 0 12px; border-radius: 999px; background: var(--lima); color: var(--sobre-lima); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; }
 .phone { position: relative; width: 300px; height: 533px; border-radius: 40px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; color: var(--tinta); overflow: hidden; }
 .phone:hover { color: var(--tinta); }
 .phone__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: .55; }
