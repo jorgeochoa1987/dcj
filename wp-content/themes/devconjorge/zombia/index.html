@@ -63,6 +63,8 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 .tb.sm{width:auto;height:42px;padding:0 14px;border-radius:14px;font-size:12px;letter-spacing:.04em}
 .tb::after{content:"";position:absolute;inset:-12px}
 .tb.dn{background:rgba(255,255,255,.55)}
+.stick{display:none;position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(8,11,24,.4);pointer-events:auto;touch-action:none}
+.stick__knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 16px rgba(0,0,0,.35);pointer-events:none}
 @media (max-height:520px){
 	.tb{width:48px;height:48px}
 	.tb.big{width:58px;height:58px;font-size:11px}
@@ -81,6 +83,10 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 	body.touch .tb{width:62px;height:62px}
 	body.touch .tb.big{width:74px;height:74px;font-size:13px}
 	body.touch #rot{display:none}
+}
+@media (orientation:landscape){
+	body.touch .touch__move{display:none}
+	body.touch .stick{display:block}
 }
 body.touch{touch-action:none}
 body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
@@ -145,6 +151,7 @@ body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-
     <button class="tb sm" data-k="swap" type="button">Héroe</button>
     <button class="tb sm" data-k="map" type="button">Mapa</button>
   </div>
+  <div class="stick" id="stick"><span class="stick__knob"></span></div>
   <div class="touch__move">
     <button class="tb" data-k="u" type="button">▲</button>
     <button class="tb" data-k="l" type="button">◀</button>
@@ -345,14 +352,19 @@ let TOUCH=false;function enableTouch(){if(TOUCH)return;TOUCH=true;document.body.
 if(matchMedia('(pointer:coarse)').matches||'ontouchstart' in window||navigator.maxTouchPoints>0)enableTouch();
 addEventListener('touchstart',enableTouch,{passive:true});
 const fingers=new Map();
+const stick=$('stick'),knob=stick.querySelector('.stick__knob');
+let stickId=null;
+function stickVisible(){return stick.getClientRects().length>0;}
+function stickSet(t){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=t.clientX-cx,dy=t.clientY-cy;const max=r.width/2-10,dist=Math.hypot(dx,dy)||1,cl=Math.min(dist,max);knob.style.transform='translate('+(dx/dist*cl)+'px,'+(dy/dist*cl)+'px)';const dead=16;keys.l=dx<-dead;keys.r=dx>dead;keys.u=dy<-dead;keys.d=dy>dead;}
+function stickStop(){stickId=null;knob.style.transform='';keys.l=keys.r=keys.u=keys.d=false;}
 function fingerBtn(t){const el=document.elementFromPoint(t.clientX,t.clientY);return el&&el.closest?el.closest('#touch [data-k]'):null;}
 function dropHeld(b){if(!b||[...fingers.values()].includes(b))return;keys[b.dataset.k]=false;b.classList.remove('dn');}
 function holdBtn(b){b.classList.add('dn');keyDown(b.dataset.k,false);if(b.dataset.k==='inv'||b.dataset.k==='swap'||b.dataset.k==='map')keys[b.dataset.k]=false;}
 function moveFinger(id,b){const prev=fingers.has(id)?fingers.get(id):undefined;if(prev===b)return;fingers.set(id,b);dropHeld(prev);if(b)holdBtn(b);}
-function endFinger(id){const prev=fingers.get(id);fingers.delete(id);dropHeld(prev);}
-function releaseTouch(){fingers.clear();document.querySelectorAll('#touch [data-k]').forEach(b=>{keys[b.dataset.k]=false;b.classList.remove('dn');});}
-document.addEventListener('touchstart',e=>{let hit=false;for(const t of e.changedTouches){const b=fingerBtn(t);if(!b)continue;hit=true;enableTouch();moveFinger(t.identifier,b);}if(hit)e.preventDefault();},{passive:false});
-document.addEventListener('touchmove',e=>{let hit=false;for(const t of e.changedTouches){if(!fingers.has(t.identifier))continue;hit=true;moveFinger(t.identifier,fingerBtn(t));}if(hit)e.preventDefault();},{passive:false});
+function endFinger(id){if(id===stickId){stickStop();return;}const prev=fingers.get(id);fingers.delete(id);dropHeld(prev);}
+function releaseTouch(){fingers.clear();stickStop();document.querySelectorAll('#touch [data-k]').forEach(b=>{keys[b.dataset.k]=false;b.classList.remove('dn');});}
+document.addEventListener('touchstart',e=>{let hit=false;for(const t of e.changedTouches){if(stickVisible()&&t.target.closest&&t.target.closest('.stick')){hit=true;enableTouch();stickId=t.identifier;stickSet(t);continue;}const b=fingerBtn(t);if(!b)continue;hit=true;enableTouch();moveFinger(t.identifier,b);}if(hit)e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{let hit=false;for(const t of e.changedTouches){if(t.identifier===stickId){hit=true;stickSet(t);continue;}if(!fingers.has(t.identifier))continue;hit=true;moveFinger(t.identifier,fingerBtn(t));}if(hit)e.preventDefault();},{passive:false});
 function endTouches(e){for(const t of e.changedTouches)endFinger(t.identifier);if(!e.touches.length)releaseTouch();}
 document.addEventListener('touchend',endTouches,{passive:false});
 document.addEventListener('touchcancel',endTouches,{passive:false});
