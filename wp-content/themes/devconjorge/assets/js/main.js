@@ -27,6 +27,35 @@
 		});
 	}
 
+	/* ---------- Zombia a pantalla completa ---------- */
+	var juego = document.querySelector('.hero__game');
+	var abrirJuego = document.querySelector('[data-zombia-full]');
+	if (juego && abrirJuego) {
+		function juegoAbierto() { return juego.classList.contains('is-full'); }
+		function pintarJuego() {
+			abrirJuego.textContent = juegoAbierto() ? 'Cerrar' : 'Pantalla completa';
+			abrirJuego.setAttribute('aria-pressed', juegoAbierto() ? 'true' : 'false');
+			document.body.classList.toggle('zombia-full', juegoAbierto());
+		}
+		function salirJuego() {
+			juego.classList.remove('is-full');
+			pintarJuego();
+			if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen().catch(function () {}); }
+		}
+		abrirJuego.addEventListener('click', function () {
+			if (juegoAbierto()) { salirJuego(); return; }
+			juego.classList.add('is-full');
+			pintarJuego();
+			if (juego.requestFullscreen) { juego.requestFullscreen().catch(function () {}); }
+		});
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && juegoAbierto()) { salirJuego(); }
+		});
+		document.addEventListener('fullscreenchange', function () {
+			if (!document.fullscreenElement && juegoAbierto()) { salirJuego(); }
+		});
+	}
+
 	/* ---------- Aparecer al hacer scroll ---------- */
 	var reveals = document.querySelectorAll('.reveal');
 	if ('IntersectionObserver' in window && !reduce) {

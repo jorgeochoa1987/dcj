@@ -56,7 +56,9 @@ $dcj_suscrito = isset( $_GET['suscrito'] ) ? sanitize_key( wp_unslash( $_GET['su
 		<span class="blob blob--lima liquid" aria-hidden="true"></span>
 		<span class="blob blob--coral" aria-hidden="true"></span>
 		<div class="hero__game glass">
-			<iframe src="<?php echo esc_url( DCJ_URI . '/zombia/index.html?v=' . DCJ_VERSION ); ?>" title="Zombia, el juego de la comunidad" allow="autoplay; fullscreen"></iframe>
+			<iframe src="<?php echo esc_url( DCJ_URI . '/zombia/index.html?v=' . DCJ_VERSION ); ?>" title="Zombia, el juego de la comunidad" allow="autoplay; fullscreen" allowfullscreen></iframe>
+			<button class="hero__full" type="button" data-zombia-full aria-pressed="false">Pantalla completa</button>
+			<p class="hero__gira">Gira el celular para jugar en grande</p>
 		</div>
 	</div>
 </section>
