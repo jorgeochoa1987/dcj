@@ -52,6 +52,7 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 #inv h2{font-size:3.4cqw;margin-bottom:.5cqw}#inv .panel{padding:1cqw 3cqw 1.2cqw}#inv .btn.sm{margin-top:.7cqw;font-size:2cqw}#inv .hint{margin-top:.8cqw;font-size:1.15cqw}
 #touch{display:none;position:absolute;inset:0;z-index:4;pointer-events:none}
 .touch__move,.touch__act,.touch__meta{position:absolute;display:flex;gap:10px;pointer-events:none}
+.touch__face,.touch__sys{display:contents}
 .touch__move{left:max(12px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-areas:" . u . " "l d r";gap:10px}
 .touch__act{right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:grid;grid-template-areas:"use ab" "jump atk";gap:12px}
 .touch__meta{left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);gap:6px}
@@ -72,17 +73,25 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 	.touch__move,.touch__act{gap:8px}
 	.tb.sm{height:32px;padding:0 8px;font-size:11px}
 }
+body.touch #touch{display:block}
 #rot{display:none;position:fixed;left:0;right:0;bottom:8vh;text-align:center;font:600 4vw Rubik,sans-serif;color:#ffd23f;z-index:9}
 @media (orientation:portrait){
-	body.touch{flex-direction:column;align-items:center;justify-content:flex-start;padding-top:max(8px,env(safe-area-inset-top))}
-	body.touch #wrap{width:min(100vw,calc((100dvh - 320px)*16/9));max-height:calc(100dvh - 320px);margin-inline:auto}
-	body.touch #touch{position:fixed;left:0;right:0;bottom:0;top:auto;height:calc(300px + env(safe-area-inset-bottom));background:#10141c;border-top:1px solid rgba(255,255,255,.08)}
-	body.touch .touch__move{left:50%;right:auto;top:14px;bottom:auto;transform:translateX(-50%);gap:18px}
-	body.touch .touch__move .tb{width:58px;height:58px}
-	body.touch .touch__move .tb::after{inset:-4px}
-	body.touch .touch__act{left:50%;right:auto;top:auto;bottom:max(54px,calc(env(safe-area-inset-bottom) + 46px));transform:translateX(-50%);display:flex;gap:10px}
-	body.touch .touch__act .tb,body.touch .touch__act .tb.big{width:64px;height:64px}
-	body.touch .touch__meta{left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%)}
+	body.touch{flex-direction:column;align-items:center;justify-content:center;padding-top:0}
+	body.touch #wrap{width:min(100vw,calc((100dvh - 266px - env(safe-area-inset-top) - env(safe-area-inset-bottom))*16/9));max-height:calc(100dvh - 266px - env(safe-area-inset-top) - env(safe-area-inset-bottom));height:auto;aspect-ratio:16/9;margin:0 0 calc(266px + env(safe-area-inset-bottom)) 0;overflow:visible}
+	body.touch #touch{position:absolute;left:0;right:0;top:100%;bottom:auto;width:100%;height:calc(266px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"move face" "sys sys" "meta meta";align-items:center;column-gap:8px;row-gap:8px;padding:16px max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:#10141c;border-top:1px solid rgba(255,255,255,.08)}
+	body.touch .touch__move,body.touch .touch__act,body.touch .touch__meta,body.touch .touch__face,body.touch .touch__sys{position:relative;left:auto;right:auto;top:auto;bottom:auto;transform:none}
+	body.touch .touch__move{grid-area:move;justify-self:start;gap:4px}
+	body.touch .touch__move .tb{width:clamp(50px,14vw,64px);height:clamp(50px,14vw,64px)}
+	body.touch .touch__move .tb::after{inset:-3px}
+	body.touch .touch__act{display:contents}
+	body.touch .touch__face{grid-area:face;display:flex;gap:14px;justify-self:end;align-self:center}
+	body.touch .touch__face .tb{width:clamp(68px,18vw,84px);height:clamp(68px,18vw,84px)}
+	body.touch .touch__face .tb::after{inset:-6px}
+	body.touch .touch__meta .tb::after{inset:-4px}
+	body.touch .touch__sys{grid-area:sys;display:flex;gap:10px;justify-self:center}
+	body.touch .touch__sys .tb{width:auto;height:38px;padding:0 16px;border-radius:19px;font-size:12px}
+	body.touch .touch__sys .tb::after{inset:-8px}
+	body.touch .touch__meta{grid-area:meta;justify-self:center;bottom:auto}
 	body.touch #rot{display:none}
 }
 @media (orientation:landscape){
@@ -160,10 +169,14 @@ body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-
     <button class="tb" data-k="r" type="button">▶</button>
   </div>
   <div class="touch__act">
-    <button class="tb" data-k="use" type="button">Entrar</button>
-    <button class="tb" data-k="ab" type="button">Poder</button>
-    <button class="tb big" data-k="jump" type="button">Salto</button>
-    <button class="tb big" data-k="atk" type="button">Golpe</button>
+    <div class="touch__face">
+      <button class="tb big" data-k="jump" type="button">Salto</button>
+      <button class="tb big" data-k="atk" type="button">Golpe</button>
+    </div>
+    <div class="touch__sys">
+      <button class="tb" data-k="use" type="button">Entrar</button>
+      <button class="tb" data-k="ab" type="button">Poder</button>
+    </div>
   </div>
 </div>
 <div id="rot">Gira el dispositivo para jugar en horizontal</div>
@@ -863,7 +876,7 @@ function frame(ts){const dt=Math.min(.033,(ts-last)/1000||0);last=ts;
   if(hitstop>0&&scene==='play'&&!paused){hitstop-=dt;}else if(!paused||scene==='over'){time+=dt;if(scene==='play'){updWorld(dt);updPlayer(dt);updEnemies(dt);if(!L.inside)updBoss(dt);else updFrenzy(dt);updProj(dt);if(!paused)sumarAvance();}
    const tx=L.locked?L.arenaX:clamp(P.x-W*.4,0,L.w-W);cam+=(tx-cam)*Math.min(1,dt*(L.locked?4:10));shake=Math.max(0,shake-dt);toastT-=dt;bannerT-=dt;}
   render();}
- $('menuBtn').style.display=scene==='play'&&!paused?'block':'none';$('touch').style.display=TOUCH&&scene==='play'&&!paused?'block':'none';
+ $('menuBtn').style.display=scene==='play'&&!paused?'block':'none';$('touch').style.display=TOUCH&&scene==='play'&&!paused?'':'none';
  if(!(hitstop>0))for(const k in press)press[k]=false;requestAnimationFrame(frame);}
 startDemo();requestAnimationFrame(frame);
 window.G={openPuzzle,get P(){return P},get L(){return L},give,toBoss(){P.x=L.arenaX+100;P.y=GY;},area(i){loadArea(i);},keys,press};
