@@ -103,10 +103,22 @@ body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-
 .slot.sel{border-color:#ffd23f;box-shadow:0 0 0 .3cqw #ffd23f}
 #menuBtn{position:absolute;top:1.3cqw;right:1.2cqw;z-index:4;display:none;font:800 1.3cqw Rubik,sans-serif;letter-spacing:.08em;padding:.6cqw 1.1cqw;border-radius:1cqw;border:.25cqw solid #101629;background:#ffd23f;color:#101629;cursor:pointer;box-shadow:0 .35cqw 0 #c8961a}
 .col{display:flex;flex-direction:column;align-items:center}
-#map .panel{width:88cqw;padding:1.6cqw 2cqw 2cqw}
-#mapsvg{width:100%;height:auto;display:block;border-radius:1.4cqw;border:.3cqw solid #101629}
-#mapsvg .node{cursor:pointer}#mapsvg .node.lock{cursor:not-allowed;opacity:.55}
-#mapsvg .node:not(.lock):hover circle.big{stroke:#fff;stroke-width:6}
+#map .panel{width:92cqw;max-width:92cqw;padding:1cqw;background:#1e225c}
+#mapsvg{width:100%;height:auto;display:block;border-radius:1.2cqw;border:.3cqw solid #101629}
+#mapsvg .node{cursor:pointer}#mapsvg .node.lock{cursor:not-allowed}
+#mapsvg .node:not(.lock):hover .zona{fill:rgba(255,255,255,.08)}
+#mapcards{display:grid;grid-template-columns:repeat(5,1fr);gap:.7cqw;margin-top:.7cqw}
+.mcard{font:inherit;color:#eef2ff;background:#262b6b;border:.25cqw solid #101629;border-radius:1cqw;padding:.4cqw .3cqw .5cqw;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:transform .12s}
+.mcard svg{width:auto;max-width:100%;height:7.6cqw;display:block;overflow:hidden}
+.mcard b{font:800 1.2cqw Rubik,sans-serif;margin-top:.2cqw;white-space:nowrap}
+.mcard span{font-size:.95cqw;color:#ffb3c0}
+.mcard.done span{color:#7ed957}.mcard.lock{cursor:not-allowed}.mcard.lock span,.mcard.lock b{color:#8791bd}
+.mcard:not(.lock):hover{transform:translateY(-.3cqw);border-color:#fff}
+.mcard.cur{border-color:#7fd8ff;box-shadow:0 0 0 .2cqw #7fd8ff}
+.mcard.nx{border-color:#ffd23f;animation:mcnx 1.2s infinite}
+@keyframes mcnx{50%{box-shadow:0 0 0 .5cqw rgba(255,210,63,.55)}}
+.mapfoot{display:flex;align-items:center;justify-content:space-between;gap:2cqw;margin-top:.6cqw;padding:0 .6cqw}
+.mapfoot .hint,.mapfoot .btn.sm{margin-top:0}
 .play{font:800 1.05cqw Rubik,sans-serif;padding:.35cqw .9cqw;border-radius:.8cqw;border:.2cqw solid #101629;background:var(--c);color:#101629;cursor:pointer;margin-right:.6cqw}
 #pz .area{margin:1.5cqw auto 0;display:grid;gap:1cqw;justify-content:center}
 .pad{width:9cqw;height:9cqw;border-radius:1.4cqw;border:.35cqw solid #101629;cursor:pointer;font-family:Bangers,Impact,sans-serif;font-size:4.5cqw;color:#101629;display:flex;align-items:center;justify-content:center;opacity:.55;transition:opacity .1s,transform .1s}
@@ -196,10 +208,9 @@ body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-
 
 <div id="map" class="ov">
   <div class="panel">
-    <h2>Mapa de Zombia</h2>
-    <svg id="mapsvg" viewBox="0 0 1000 400"></svg>
-    <p class="hint" id="maphint"></p>
-    <button class="btn sm" id="mapBack">Volver</button>
+    <svg id="mapsvg" viewBox="0 20 1536 580" role="img" aria-label="Mapa de Zombia"></svg>
+    <div id="mapcards"></div>
+    <div class="mapfoot"><p class="hint" id="maphint"></p><button class="btn sm" id="mapBack">Volver</button></div>
   </div>
 </div>
 
@@ -443,11 +454,40 @@ let switching=false;
 const prog={max:0,cleared:[false,false,false,false,false]};
 function switchHero(h){if(h===hero||P.dead)return;BAG[hero.id].eq=P.eq;hero=h;P.inv=BAG[h.id].inv;P.eq=BAG[h.id].eq;P.climb=null;P.sq=-.2;fx(P.x,P.y-45,h.col,18,220);SFX.swap();say('Ahora juegas con '+h.name);}
 function startGame(h){DEMO=false;keys.r=keys.l=false;score=0;farX=0;advanceBag=0;if(switching&&P){switching=false;switchHero(h);}else{hero=h;newBags();prog.max=0;prog.cleared.fill(false);P=newPlayer();loadArea(0);}scene='play';paused=false;show('');}
-function openMap(next){if(!P)return;paused=true;show('map');const T=THEMES,pts=[[90,300],[290,150],[500,270],[710,120],[910,250]],cur=outer?outer.i:0;let h=`<defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d3b2f"/><stop offset=".5" stop-color="#3a2a52"/><stop offset="1" stop-color="#3a0f52"/></linearGradient></defs><rect width="1000" height="400" fill="url(#mg)"/>`;
- for(let k=0;k<40;k++)h+=`<circle cx="${(h1(k)*1000).toFixed(0)}" cy="${(h1(k+50)*400).toFixed(0)}" r="${(8+h1(k+9)*26).toFixed(0)}" fill="rgba(255,255,255,.035)"/>`;
- h+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#101629" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#ffd23f" stroke-width="6" stroke-dasharray="4 16" stroke-linecap="round"/>`;
- pts.forEach((p,i)=>{const lock=i>prog.max,done=prog.cleared[i],here=i===cur,nx=next===i;h+=`<g class="node${lock?' lock':''}" data-i="${i}">${nx||here?`<circle cx="${p[0]}" cy="${p[1]}" r="46" fill="none" stroke="${nx?'#ffd23f':'#7fd8ff'}" stroke-width="4"><animate attributeName="r" values="42;54;42" dur="1.2s" repeatCount="indefinite"/></circle>`:''}<circle class="big" cx="${p[0]}" cy="${p[1]}" r="36" fill="${lock?'#3a4572':T[i].top}" stroke="#101629" stroke-width="6"/><text x="${p[0]}" y="${p[1]+13}" text-anchor="middle" font-family="Bangers,Impact" font-size="38" fill="#101629">${lock?'?':done?'✓':i+1}</text><text x="${p[0]}" y="${p[1]+66}" text-anchor="middle" font-family="Rubik" font-weight="800" font-size="17" fill="#fff">${lock?'???':T[i].n}</text><text x="${p[0]}" y="${p[1]+86}" text-anchor="middle" font-family="Rubik" font-size="13" fill="${done?'#7ed957':'#ffb3c0'}">${lock?'Bloqueada':(done?'Jefe derrotado':'Jefe: '+BOSS[i].n.toLowerCase())}</text>${here?`<text x="${p[0]}" y="${p[1]-50}" text-anchor="middle" font-family="Rubik" font-weight="800" font-size="14" fill="#7fd8ff">ESTÁS AQUÍ</text>`:''}</g>`;});
- const sv=$('mapsvg');sv.innerHTML=h;for(const n of sv.querySelectorAll('.node:not(.lock)'))n.onclick=()=>{SFX.ui();loadArea(+n.dataset.i);show('');paused=false;};
+// Mapa ilustrado (mapa.webp, 1536x1024). Arriba el mapa; abajo, las fichas de estado de cada área.
+// Estados: bloq = gris, hecho = gris con ✓ (jefe derrotado), abierta = a color (se puede jugar).
+const MAPA={
+ nodo:[[222,372],[522,340],[808,402],[1090,325],[1380,405]],
+ zona:[[15,150,355,390],[370,150,290,390],[660,150,300,390],[960,150,270,390],[1230,150,300,390]],
+ ficha:[
+  {bloq:[25,655,175,140],hecho:[195,655,155,140],abierta:[345,650,170,145]},
+  {bloq:[545,655,195,150],hecho:[745,655,200,150],abierta:[395,180,215,150]},
+  {bloq:[995,650,180,155],hecho:[1172,650,165,155],abierta:[1330,645,180,160]},
+  {bloq:[115,845,190,160],hecho:[300,845,190,160],abierta:[488,835,215,170]},
+  {bloq:[792,850,200,155],hecho:[992,850,195,155],abierta:[1185,830,215,175]}]};
+(new Image()).src='mapa.webp';
+function openMap(next){if(!P)return;paused=true;show('map');const T=THEMES,cur=outer?outer.i:0,img=`href="mapa.webp" width="1536" height="1024"`;
+ const est=i=>i>prog.max?'bloq':prog.cleared[i]?'hecho':'abierta';
+ let h=`<defs><filter id="mgris"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="linear" slope=".6"/><feFuncG type="linear" slope=".6"/><feFuncB type="linear" slope=".7"/></feComponentTransfer></filter>`;
+ const x0=prog.max<4?MAPA.zona[prog.max+1][0]:0;
+ if(prog.max<4)h+=`<clipPath id="mbloq"><polygon points="${x0<1160?`${x0},195 1160,195 1160,0`:`${x0},0`} 1536,0 1536,1024 ${x0},1024"/></clipPath>`;
+ h+=`</defs><image ${img}/>`;
+ if(prog.max<4)h+=`<image ${img} filter="url(#mgris)" clip-path="url(#mbloq)"/>`;
+ MAPA.nodo.forEach((p,i)=>{const z=MAPA.zona[i],e=est(i),here=i===cur,nx=next===i;
+  h+=`<g class="node${e==='bloq'?' lock':''}" data-i="${i}"><rect class="zona" x="${z[0]}" y="${z[1]}" width="${z[2]}" height="${z[3]}" rx="30" fill="transparent"/>`;
+  if(nx||here)h+=`<circle cx="${p[0]}" cy="${p[1]}" r="48" fill="none" stroke="${nx?'#ffd23f':'#7fd8ff'}" stroke-width="7"><animate attributeName="r" values="46;62;46" dur="1.2s" repeatCount="indefinite"/></circle>`;
+  if(e==='bloq')h+=`<circle cx="${p[0]}" cy="${p[1]}" r="38" fill="#3a4572" stroke="#101629" stroke-width="6"/><text x="${p[0]}" y="${p[1]+17}" text-anchor="middle" font-family="Bangers,Impact" font-size="50" fill="#aab6e0">?</text>`;
+  if(e==='hecho')h+=`<circle cx="${p[0]+34}" cy="${p[1]-30}" r="20" fill="#7ed957" stroke="#101629" stroke-width="5"/><text x="${p[0]+34}" y="${p[1]-20}" text-anchor="middle" font-family="Rubik" font-weight="800" font-size="28" fill="#101629">✓</text>`;
+  if(here)h+=`<rect x="${p[0]-80}" y="${p[1]-98}" width="160" height="34" rx="17" fill="#101629"/><text x="${p[0]}" y="${p[1]-74}" text-anchor="middle" font-family="Rubik" font-weight="800" font-size="20" fill="#7fd8ff">ESTÁS AQUÍ</text>`;
+  h+=`</g>`;});
+ const sv=$('mapsvg');sv.innerHTML=h;
+ const viajar=i=>{SFX.ui();loadArea(i);show('');paused=false;};
+ for(const n of sv.querySelectorAll('.node:not(.lock)'))n.onclick=()=>viajar(+n.dataset.i);
+ const mc=$('mapcards');mc.innerHTML='';
+ T.forEach((t,i)=>{const e=est(i),r=MAPA.ficha[i][e],b=document.createElement('button');
+  b.className='mcard '+(e==='bloq'?'lock':e==='hecho'?'done':'open')+(i===cur?' cur':'')+(next===i?' nx':'');
+  b.innerHTML=`<svg viewBox="${r.join(' ')}"><image ${img}/></svg><b>${t.n}</b><span>${e==='bloq'?'Bloqueada':e==='hecho'?'Jefe derrotado':'Jefe: '+BOSS[i].n.toLowerCase()}</span>`;
+  if(e==='bloq')b.disabled=true;else b.onclick=()=>viajar(i);mc.appendChild(b);});
  $('maphint').textContent=next!==undefined?'¡Área superada! Elige a dónde ir.':'Toca un área desbloqueada para viajar (el área empieza de nuevo).';$('mapBack').style.display=next!==undefined?'none':'';}
 $('mapBack').onclick=()=>{show('');paused=false;};$('pauseMap').onclick=()=>openMap();
 $('pauseMus').onclick=()=>{MUS.on=!MUS.on;$('pauseMus').textContent='Música: '+(MUS.on?'sí':'no');};
