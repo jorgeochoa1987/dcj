@@ -337,7 +337,7 @@ const BOSS=[
  {k:'rana',n:'REY SAPO',hp:320,w:180,h:155,spd:0,spr:{id:'boss-sapo',bh:140,f:[[8,39,148,134],[172,34,157,137],[339,21,191,155],[560,3,253,174],[6,185,166,132],[172,204,173,113],[347,185,266,132],[616,203,202,114],[3,324,156,212],[159,324,162,212],[321,340,323,196],[644,374,173,162]]},atks:[
    {t:'hop',tele:.45,dmg:16},
    {t:'beam',style:'tongue',tele:.65,act:.6,len:480,y0:56,y1:80,ox:60,dmg:14}]},
- {k:'pome',n:'POMERANIA CROQUETERA',hp:400,w:150,h:136,spd:80,spr:{id:'boss-pome',bh:136,f:[[14,56,148,141],[167,60,149,138],[323,64,134,134],[466,68,137,130],[609,69,136,129],[747,63,132,136],[885,66,133,132],[11,268,158,155],[194,285,212,132],[417,280,218,141],[635,256,172,164],[839,293,159,136],[22,478,201,166],[260,530,219,114],[493,491,252,157],[777,483,179,165]]},atks:[
+ {k:'pome',n:'POMERANIA CROQUETERA',hp:400,w:150,h:136,spd:80,spr:{id:'boss-pome',bh:144,f:[[19,64,207,144,144],[266,84,128,120,117],[400,72,120,132,129],[532,72,114,132,129],[658,72,103,130,126],[784,28,224,184,128],[20,238,240,210,146],[340,238,310,220,156],[718,238,284,194,176],[20,458,414,196,144],[500,450,420,214,158]]},atks:[
    {t:'lob',style:'kibble',tele:.5,act:.9,n:5,dmg:12},
    {t:'charge',tele:.4,act:.5,v:600,dmg:12},
    {t:'beam',style:'lick',tele:.35,act:.4,len:130,y0:8,y1:105,ox:50,dmg:12}]},
@@ -733,13 +733,13 @@ function drawEnemy(e){const x=e.x-cam,y=e.y,bob=Math.sin(e.ph*8)*2;shadow(x,e.gy
   g.beginPath();g.moveTo(-6,-66+bob);g.lineTo(-10,-76+bob);g.stroke();circ(-10,-78+bob,4,Math.sin(e.ph*10)>0?'#ff4d6d':'#7a1f30');rr(-15,-60+bob,9,6,2,'#35f0ff');}
  g.restore();}
 function bossPose(b){const k=b.c.k,a=b.atk,on=b.st==='act'||b.st==='tele',step=Math.floor(time*8),far=Math.abs(P.x-b.x)>90;
- if(k==='pome'){if(b.st==='dead')return b.t>.7?13:14;if(b.flash>.05)return 11;if(on&&a){if(a.t==='lob')return on&&b.st==='act'?9:7;if(a.t==='charge')return 8;if(a.t==='beam')return 7;}return far?step%7:0;}
+ if(k==='pome'){const rage=b.hp<b.max*.45;if(b.st==='dead')return 9;if(b.flash>.05)return 8;if(on&&a){if(a.t==='charge')return b.st==='tele'?5:7;if(a.t==='lob'||a.t==='beam')return b.st==='tele'?5:6;}if(rage)return 10;return far?1+(step%4):0;}
  if(k==='rana'){if(b.st==='dead')return 11;if(b.flash>.05)return 8;if(on&&a){if(a.t==='hop')return b.y<GY-8?6:5;if(a.t==='beam')return b.st==='act'?7:4;}return far?1+step%2:0;}
  if(k==='zombot'){if(b.st==='dead')return b.t>.8?11:12;if(b.flash>.05)return 7;if(on&&a){if(a.t==='beam')return b.st==='act'?9:6;if(a.t==='charge')return 8;if(a.t==='slam')return b.st==='act'?10:6;}return far?step%5:15;}
  if(k==='ia'&&b.phase===2){if(b.st==='dead')return b.t>.5?18:19;if(b.flash>.05)return 10;if(on&&a){if(a.t==='beam')return b.st==='act'?9:4;if(a.t==='charge'||a.t==='slam')return b.st==='act'?8:5;if(a.t==='lob'||a.t==='rain')return 5;}return far?step%4:0;}
  if(k==='ia'){if(b.st==='dead')return 12;if(b.st==='morph')return 11;if(b.flash>.05)return 7;if(on&&a){if(a.t==='beam')return b.st==='act'?9:5;if(a.t==='charge'||a.t==='slam')return b.st==='act'?8:6;if(a.t==='lob'||a.t==='rain')return 5;}return far?step%4:0;}
  return 0;}
-function drawBossFrame(b,x){const S=b.phase===2&&b.c.spr2?b.c.spr2:b.c.spr;if(!S)return false;const im=IMG[S.id];if(!im||!im.complete)return false;const fr=S.f[bossPose(b)],sc=(b.h/S.bh)*(b.st==='morph'?b.sc:1);g.save();g.translate(x,b.y);g.scale(b.face*sc,sc);if(b.flash>0)g.globalAlpha*=.6;g.drawImage(im,fr[0],fr[1],fr[2],fr[3],-fr[2]/2,-fr[3],fr[2],fr[3]);g.restore();return true;}
+function drawBossFrame(b,x){const S=b.phase===2&&b.c.spr2?b.c.spr2:b.c.spr;if(!S)return false;const im=IMG[S.id];if(!im||!im.complete)return false;const fr=S.f[bossPose(b)],sc=(b.h/(fr[4]||S.bh))*(b.st==='morph'?b.sc:1);g.save();g.translate(x,b.y);g.scale(b.face*sc,sc);if(b.flash>0)g.globalAlpha*=.6;g.drawImage(im,fr[0],fr[1],fr[2],fr[3],-fr[2]/2,-fr[3],fr[2],fr[3]);g.restore();return true;}
 function drawBoss(){const b=L.boss;if(!b||b.st==='sleep'&&L.bossDead)return;const x=b.x-cam,k=b.c.k,tele=b.st==='tele',act=b.st==='act',a=b.atk,br=Math.sin(time*3)*3;
  if(b.st==='dead'){if(b.t<=0)return;g.globalAlpha=clamp(b.t/1.6,0,1);}
  shadow(x,GY-14,b.w*.55);
