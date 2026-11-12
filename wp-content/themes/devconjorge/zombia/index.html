@@ -338,9 +338,9 @@ function buildArea(i){
   else if(sg==='mover'){L.pits.push([x+100,x+560]);L.plats.push({x:x+265,bx:x+265,y:GY-30,w:130,mv:135,sp:1.3+R()*.4,ph:R()*6});en(x+600,x+720,1);x+=740;}
  }
  L.arenaX=x+140;L.w=L.arenaX+1000;
- // Puntos de control: a un tercio, a dos tercios y justo antes del jefe, siempre en suelo firme.
+ // Un punto de control por área, a mitad de camino y en suelo firme.
  const libre=cx=>!L.pits.some(p=>cx>p[0]-70&&cx<p[1]+70)&&!L.spikes.some(s=>Math.abs(cx-s.x)<s.w/2+60)&&!L.holes.some(h=>Math.abs(cx-h.x)<100)&&!L.tramps.some(t=>Math.abs(cx-t.x)<80)&&!L.doors.some(d=>Math.abs(cx-d.x)<130)&&!L.boxes.some(b=>Math.abs(cx-b.x)<70)&&!L.crates.some(c=>Math.abs(cx-c.x)<70)&&!L.ladders.some(l=>Math.abs(cx-l.x)<60);
- L.cp=120;L.cps=[];for(const f of[.33,.66,1]){let cx=f<1?Math.round(L.arenaX*f):L.arenaX-70;for(let k=0;k<60&&!libre(cx);k++)cx+=f<1?30:-30;if(libre(cx))L.cps.push({x:cx,on:false,t:0});}
+ L.cp=120;L.cps=[];{let cx=Math.round(L.arenaX*.5);for(let k=0;k<60&&!libre(cx);k++)cx+=30;if(libre(cx))L.cps.push({x:cx,on:false,t:0});}
  const dn=i===0?['f:fence','f:hay','f:barrel','f:pig','f:cart','f:fence']:i===1?['w:mush','w:mushS','w:lantern','w:bush','w:bush2','w:rocks','w:plant','w:fern','w:log','w:mush']:i===3?['c:fence','c:barrel','c:rocks','c:hand','c:sign','c:fence']:i<3?['bush','plant','rocks','lamp','bush']:['lamp','torch','rocks','banner','lamp'];
  for(let dx=260;dx<L.arenaX-60;dx+=150+R()*230){const nm=dn[Math.floor(R()*dn.length)];if(L.pits.some(p=>dx>p[0]-70&&dx<p[1]+70)||L.doors.some(d=>Math.abs(dx-d.x)<210)||L.crates.some(c=>Math.abs(dx-c.x)<90)||L.ladders.some(l=>Math.abs(dx-l.x)<60)||L.boxes.some(b=>Math.abs(dx-b.x)<70)||L.spikes.some(b=>Math.abs(dx-b.x)<110)||L.holes.some(h=>Math.abs(dx-h.x)<100)||L.tramps.some(t=>Math.abs(dx-t.x)<80)||L.cps.some(c=>Math.abs(dx-c.x)<70))continue;L.deco.push({n:nm,x:dx,sc:.62+R()*.14});}
  L.plats.push({x:L.arenaX+170,y:GY-95,w:130},{x:L.arenaX+660,y:GY-95,w:130});
@@ -1021,7 +1021,7 @@ function demoAI(dt){keys.r=true;keys.l=false;keys.d=false;const gun=ITEMS[P.eq].
  demoT+=dt;if(Math.abs(P.x-demoX)>60){demoX=P.x;demoT=0;}if(demoT>2&&P.on&&!foe&&!bx)press.jump=true;
  if(demoT>7||P.x>L.arenaX-80)startDemo();}
 function render(){g.save();if(shake>0)g.translate((Math.random()-.5)*shake*24,(Math.random()-.5)*shake*24);
- drawBG();drawGround();drawDoorsEtc();for(const e of L.en)if(e.x-cam>-60&&e.x-cam<W+60)drawEnemy(e);if(!L.inside)drawBoss();drawPlayer();drawProj();drawSuper();if(dbg)drawDbg();g.restore();if(DEMO)return;if((L.dusk||0)>.02){const d=L.dusk;g.fillStyle='rgba(4,0,12,'+(0.62*d)+')';g.fillRect(0,0,W,H);const vg=g.createRadialGradient(W/2,H*.62,90,W/2,H*.5,560);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(0.5*d)+')');g.fillStyle=vg;g.fillRect(0,0,W,H);for(const k of L.picks){if(k.got)continue;const x=k.x-cam,y=k.y+Math.sin(time*4+k.x)*4;g.save();g.translate(x-16,y-16);g.scale(.78,.78);g.drawImage(icon('heart'),0,0);g.restore();}}if(L.frenzy&&!L.frenzy.done){g.fillStyle='rgba(255,0,40,'+(.07+.06*Math.sin(time*9))+')';g.fillRect(0,0,W,H);}drawHUD();}
+ drawBG();drawGround();if((L.dusk||0)>.02){g.fillStyle='rgba(10,0,24,'+(0.5*L.dusk)+')';g.fillRect(-40,-40,W+80,H+80);}drawDoorsEtc();for(const e of L.en)if(e.x-cam>-60&&e.x-cam<W+60)drawEnemy(e);if(!L.inside)drawBoss();drawPlayer();drawProj();drawSuper();if(dbg)drawDbg();g.restore();if(DEMO)return;if((L.dusk||0)>.02){const d=L.dusk;const vg=g.createRadialGradient(W/2,H*.62,90,W/2,H*.5,560);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(0.28*d)+')');g.fillStyle=vg;g.fillRect(0,0,W,H);for(const k of L.picks){if(k.got)continue;const x=k.x-cam,y=k.y+Math.sin(time*4+k.x)*4;g.save();g.translate(x-16,y-16);g.scale(.78,.78);g.drawImage(icon('heart'),0,0);g.restore();}}if(L.frenzy&&!L.frenzy.done){g.fillStyle='rgba(255,0,40,'+(.07+.06*Math.sin(time*9))+')';g.fillRect(0,0,W,H);}drawHUD();}
 
 /* ---------- súper poderes ----------
  Fogonero: INFIERNO, fuego en toda la pantalla. Cantante: GRITO SÓNICO, la pantalla tiembla, a los pequeños los quiebra
