@@ -65,6 +65,9 @@ kbd{display:inline-block;background:#1c2540;border:.15cqw solid #44507a;border-b
 .tb.big{width:78px;height:78px;font-size:13px;background:rgba(255,210,63,.34);border-color:#ffd23f}
 .tb.sm{width:auto;height:42px;padding:0 14px;border-radius:14px;font-size:12px;letter-spacing:.04em}
 .tb::after{content:"";position:absolute;inset:-12px}
+.tb i{font-style:normal;font-size:1.5em;line-height:1;pointer-events:none}.tb b{font-weight:800;pointer-events:none}
+.tb{flex-direction:column;gap:2px}.tb.sm,.touch__sys .tb{flex-direction:row;gap:5px}.tb.sm i,.touch__sys .tb i{font-size:1.2em}
+.tb--alt,.tb--pausa{display:none!important}
 .tb.dn{background:rgba(255,255,255,.55)}
 .stick{display:none;position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:rgba(8,11,24,.4);pointer-events:auto;touch-action:none}
 .stick__knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 16px rgba(0,0,0,.35);pointer-events:none}
@@ -96,9 +99,38 @@ body.touch #touch{display:block}
 	body.touch .touch__meta{grid-area:meta;justify-self:center;bottom:auto}
 	body.touch #rot{display:none}
 }
+/* Horizontal (teléfono y tablet): controles flotantes sobre el juego, estilo shooter móvil.
+   Joystick que aparece donde pones el pulgar izquierdo, racimo en arco a la derecha alrededor del salto,
+   un segundo golpe a la izquierda y los botones de sistema como iconos pequeños en el borde derecho. */
 @media (orientation:landscape){
+	body.touch #touch{position:fixed;inset:0;z-index:6;--u:min(1vmin,5.4px);--r:max(calc(var(--u)*3),env(safe-area-inset-right));--l:max(calc(var(--u)*3),env(safe-area-inset-left));--b:max(calc(var(--u)*3.5),env(safe-area-inset-bottom))}
+	body.touch{align-items:flex-start}
 	body.touch .touch__move{display:none}
-	body.touch .stick{display:block}
+	body.touch .touch__act{display:contents}
+	body.touch #touch .tb{position:absolute;width:calc(var(--u)*13);height:calc(var(--u)*13);padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(10,14,26,.32);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);box-shadow:0 2px 10px rgba(0,0,0,.25);font-size:calc(var(--u)*2.1);flex-direction:column;gap:0;transition:transform .06s}
+	body.touch #touch .tb i{font-size:calc(var(--u)*5.6)}
+	body.touch #touch .tb b{font-size:calc(var(--u)*1.9);letter-spacing:.03em;opacity:.9;margin-top:calc(var(--u)*.4)}
+	body.touch #touch .tb.dn{background:rgba(255,255,255,.42);transform:scale(.93)}
+	body.touch #touch .tb::after{inset:calc(var(--u)*-1.2)}
+	body.touch #touch .tb[data-k=jump]{right:var(--r);bottom:var(--b);width:calc(var(--u)*21);height:calc(var(--u)*21);background:rgba(255,210,63,.28);border-color:#ffd23f}
+	body.touch #touch .tb[data-k=jump] i{font-size:calc(var(--u)*8)}
+	body.touch #touch .tb[data-k=atk]{right:calc(var(--r) + var(--u)*24);bottom:calc(var(--b) + var(--u)*2);width:calc(var(--u)*17);height:calc(var(--u)*17);background:rgba(229,32,58,.3);border-color:#ff8a9a}
+	body.touch #touch .tb[data-k=atk] i{font-size:calc(var(--u)*7)}
+	body.touch #touch .tb[data-k=ab]{right:calc(var(--r) + var(--u)*3.5);bottom:calc(var(--b) + var(--u)*24)}
+	body.touch #touch .tb[data-k=use]{right:calc(var(--r) + var(--u)*19.5);bottom:calc(var(--b) + var(--u)*21.5);width:calc(var(--u)*11.5);height:calc(var(--u)*11.5)}
+	body.touch #touch .tb[data-k=sup]{right:calc(var(--r) + var(--u)*43);bottom:calc(var(--b) + var(--u)*5);width:calc(var(--u)*13);height:calc(var(--u)*13);opacity:.5}
+	body.touch #touch .tb[data-k=sup].full{opacity:1;background:rgba(255,210,63,.5);border-color:#ffd23f}
+	body.touch #touch .tb.tb--alt[data-k=atk]{display:flex!important;left:var(--l);right:auto;bottom:calc(var(--b) + var(--u)*44);width:calc(var(--u)*13);height:calc(var(--u)*13);background:rgba(229,32,58,.24);border-color:#ff8a9a}
+	body.touch #touch .tb--alt i{font-size:calc(var(--u)*5.6)}
+	body.touch #touch .tb--pausa{display:flex!important}
+	body.touch #menuBtn{display:none!important}
+	body.touch .touch__meta{position:absolute;left:auto;right:var(--r);top:max(calc(var(--u)*4),env(safe-area-inset-top));bottom:auto;transform:none;display:flex;flex-direction:column;gap:calc(var(--u)*2)}
+	body.touch #touch .touch__meta .tb{position:relative;width:calc(var(--u)*9.5);height:calc(var(--u)*9.5)}
+	body.touch #touch .touch__meta .tb i{font-size:calc(var(--u)*4.4)}
+	body.touch #touch .touch__meta .tb b{display:none}
+	body.touch .stick{display:block;left:var(--l);bottom:calc(var(--b) + var(--u)*2);width:calc(var(--u)*32);height:calc(var(--u)*32);background:rgba(10,14,26,.26);border-color:rgba(255,255,255,.45);opacity:.75;transition:opacity .15s}
+	body.touch .stick.on{opacity:1}
+	body.touch .stick__knob{width:calc(var(--u)*13);height:calc(var(--u)*13);margin:calc(var(--u)*-6.5) 0 0 calc(var(--u)*-6.5);background:rgba(255,255,255,.75)}
 }
 body.touch{touch-action:none}
 body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
@@ -171,9 +203,10 @@ body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-
 <button id="menuBtn">MENÚ</button>
 <div id="touch">
   <div class="touch__meta">
-    <button class="tb sm" data-k="inv" type="button">Mochila</button>
-    <button class="tb sm" data-k="swap" type="button">Héroe</button>
-    <button class="tb sm" data-k="map" type="button">Mapa</button>
+    <button class="tb sm tb--pausa" data-k="esc" type="button" aria-label="Pausa"><i>⏸</i><b>Pausa</b></button>
+    <button class="tb sm" data-k="inv" type="button" aria-label="Mochila"><i>🎒</i><b>Mochila</b></button>
+    <button class="tb sm" data-k="swap" type="button" aria-label="Cambiar héroe"><i>🔄</i><b>Héroe</b></button>
+    <button class="tb sm" data-k="map" type="button" aria-label="Mapa"><i>🗺️</i><b>Mapa</b></button>
   </div>
   <div class="stick" id="stick"><span class="stick__knob"></span></div>
   <div class="touch__move">
@@ -184,13 +217,14 @@ body.touch #menuBtn{font-size:14px;padding:10px 14px;top:max(12px,env(safe-area-
   </div>
   <div class="touch__act">
     <div class="touch__face">
-      <button class="tb big" data-k="jump" type="button">Salto</button>
-      <button class="tb big" data-k="atk" type="button">Golpe</button>
+      <button class="tb big" data-k="jump" type="button" aria-label="Saltar"><i>⬆</i><b>Salto</b></button>
+      <button class="tb big" data-k="atk" type="button" aria-label="Golpe"><i>👊</i><b>Golpe</b></button>
+      <button class="tb tb--alt" data-k="atk" type="button" aria-label="Golpe"><i>👊</i></button>
     </div>
     <div class="touch__sys">
-      <button class="tb" data-k="sup" id="supBtn" type="button">⚡ SÚPER</button>
-      <button class="tb" data-k="use" type="button">Entrar</button>
-      <button class="tb" data-k="ab" type="button">Poder</button>
+      <button class="tb" data-k="sup" id="supBtn" type="button" aria-label="Súper"><i>⚡</i><b>Súper</b></button>
+      <button class="tb" data-k="use" type="button" aria-label="Entrar"><i>🚪</i><b>Entrar</b></button>
+      <button class="tb" data-k="ab" id="abBtn" type="button" aria-label="Poder"><i>🔥</i><b>Poder</b></button>
     </div>
   </div>
 </div>
@@ -417,14 +451,20 @@ const stick=$('stick'),knob=stick.querySelector('.stick__knob');
 let stickId=null;
 function stickVisible(){return stick.getClientRects().length>0;}
 function stickSet(t){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=t.clientX-cx,dy=t.clientY-cy;const max=r.width/2-10,dist=Math.hypot(dx,dy)||1,cl=Math.min(dist,max);knob.style.transform='translate('+(dx/dist*cl)+'px,'+(dy/dist*cl)+'px)';const dead=16;keys.l=dx<-dead;keys.r=dx>dead;keys.u=dy<-dead;keys.d=dy>dead;}
-function stickStop(){stickId=null;knob.style.transform='';keys.l=keys.r=keys.u=keys.d=false;}
+function stickStop(){stickId=null;knob.style.transform='';stick.style.left=stick.style.top=stick.style.bottom='';stick.classList.remove('on');keys.l=keys.r=keys.u=keys.d=false;}
+// Horizontal: el joystick aparece donde pones el pulgar (zona inferior izquierda) y los controles pasan a cubrir toda la pantalla.
+const HORIZ=matchMedia('(orientation:landscape)'),touchEl=$('touch'),wrapEl=$('wrap');
+function zonaStick(t){return HORIZ.matches&&t.clientX<innerWidth*.45&&t.clientY>innerHeight*.3;}
+function stickAt(t){const w=stick.getBoundingClientRect().width,x=Math.max(8,t.clientX-w/2),y=Math.min(innerHeight-w-8,Math.max(8,t.clientY-w/2));stick.style.left=x+'px';stick.style.top=y+'px';stick.style.bottom='auto';stick.classList.add('on');}
+function placeTouch(){const want=HORIZ.matches?document.body:wrapEl;if(touchEl.parentNode!==want)want.appendChild(touchEl);}
+placeTouch();HORIZ.addEventListener('change',()=>{releaseTouch();placeTouch();});
 function fingerBtn(t){const el=document.elementFromPoint(t.clientX,t.clientY);return el&&el.closest?el.closest('#touch [data-k]'):null;}
-function dropHeld(b){if(!b||[...fingers.values()].includes(b))return;keys[b.dataset.k]=false;b.classList.remove('dn');}
-function holdBtn(b){b.classList.add('dn');keyDown(b.dataset.k,false);if(b.dataset.k==='inv'||b.dataset.k==='swap'||b.dataset.k==='map')keys[b.dataset.k]=false;}
+function dropHeld(b){if(!b||[...fingers.values()].includes(b))return;b.classList.remove('dn');if(![...fingers.values()].some(o=>o&&o.dataset.k===b.dataset.k))keys[b.dataset.k]=false;}
+function holdBtn(b){b.classList.add('dn');keyDown(b.dataset.k,false);if(b.dataset.k==='inv'||b.dataset.k==='swap'||b.dataset.k==='map'||b.dataset.k==='esc')keys[b.dataset.k]=false;}
 function moveFinger(id,b){const prev=fingers.has(id)?fingers.get(id):undefined;if(prev===b)return;fingers.set(id,b);dropHeld(prev);if(b)holdBtn(b);}
 function endFinger(id){if(id===stickId){stickStop();return;}const prev=fingers.get(id);fingers.delete(id);dropHeld(prev);}
 function releaseTouch(){fingers.clear();stickStop();document.querySelectorAll('#touch [data-k]').forEach(b=>{keys[b.dataset.k]=false;b.classList.remove('dn');});}
-document.addEventListener('touchstart',e=>{let hit=false;for(const t of e.changedTouches){if(stickVisible()&&t.target.closest&&t.target.closest('.stick')){hit=true;enableTouch();stickId=t.identifier;stickSet(t);continue;}const b=fingerBtn(t);if(!b)continue;hit=true;enableTouch();moveFinger(t.identifier,b);}if(hit)e.preventDefault();},{passive:false});
+document.addEventListener('touchstart',e=>{let hit=false;for(const t of e.changedTouches){if(stickVisible()&&t.target.closest&&t.target.closest('.stick')){hit=true;enableTouch();stickId=t.identifier;stickSet(t);continue;}const b=fingerBtn(t);if(!b){if(stickId===null&&stickVisible()&&zonaStick(t)){hit=true;stickId=t.identifier;stickAt(t);stickSet(t);}continue;}hit=true;enableTouch();moveFinger(t.identifier,b);}if(hit)e.preventDefault();},{passive:false});
 document.addEventListener('touchmove',e=>{let hit=false;for(const t of e.changedTouches){if(t.identifier===stickId){hit=true;stickSet(t);continue;}if(!fingers.has(t.identifier))continue;hit=true;moveFinger(t.identifier,fingerBtn(t));}if(hit)e.preventDefault();},{passive:false});
 function endTouches(e){for(const t of e.changedTouches)endFinger(t.identifier);if(!e.touches.length)releaseTouch();}
 document.addEventListener('touchend',endTouches,{passive:false});
@@ -1072,7 +1112,7 @@ function frame(ts){const dt=Math.min(.033,(ts-last)/1000||0);last=ts;
   if(hitstop>0&&scene==='play'&&!paused){hitstop-=dt;}else if(!paused||scene==='over'){time+=dt;if(scene==='play'){updWorld(dt);updPlayer(dt);updEnemies(dt);if(!L.inside)updBoss(dt);else updFrenzy(dt);updProj(dt);updSuper(dt);if(!paused)sumarAvance();}
    const tx=L.locked?L.arenaX:clamp(P.x-W*.4,0,L.w-W);cam+=(tx-cam)*Math.min(1,dt*(L.locked?4:10));shake=Math.max(0,shake-dt);toastT-=dt;bannerT-=dt;}
   render();}
- $('menuBtn').style.display=scene==='play'&&!paused?'block':'none';$('touch').style.display=TOUCH&&scene==='play'&&!paused?'':'none';if(TOUCH&&P)$('supBtn').classList.toggle('full',(P.en||0)>=100);
+ $('menuBtn').style.display=scene==='play'&&!paused?'block':'none';$('touch').style.display=TOUCH&&scene==='play'&&!paused?'':'none';if(TOUCH&&P){$('supBtn').classList.toggle('full',(P.en||0)>=100);const ic=hero?{fire:'🔥',double:'🎤',climb:'🪜'}[hero.ab]:'🔥',ai=$('abBtn').firstChild;if(ai.textContent!==ic)ai.textContent=ic;}
  if(!(hitstop>0))for(const k in press)press[k]=false;requestAnimationFrame(frame);}
 startDemo();requestAnimationFrame(frame);
 window.G={openPuzzle,get P(){return P},get L(){return L},give,toBoss(){P.x=L.arenaX+100;P.y=GY;},area(i){loadArea(i);},keys,press};
