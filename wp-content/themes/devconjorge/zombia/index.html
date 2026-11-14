@@ -347,7 +347,7 @@ const THEMES=[
  {n:'Ciudad Zombi',sky:['#1b1f3b','#5b4b8a'],hill:'#2c2f55',mid:'#20223f',top:'#6b7086',dirt:'#34364d',deco:'city',skin:'zombie',orb:'#f4f1ff'},
  {n:'Núcleo de la IA',sky:['#12001f','#5a0f5f'],hill:'#3a0f52',mid:'#26083a',top:'#b03bd6',dirt:'#2a0e3d',deco:'spike',skin:'glitch',orb:'#ff5ee0'}];
 const LAYOUT=[
- ['en','boxes','steps','climb','door','pit','ruta','ladder','en','cave','pajar','high','vines','granjero','bounce','door','boxes','en'],
+ ['en','boxes','steps','granero','climb','door','pit','ruta','ladder','en','cave','pajar','high','vines','granjero','bounce','door','boxes','en'],
  ['en','bog','door','climb','steps','bog','ladder','cave','vines','boxes','bounce','door','bog','high','en'],
  ['boxes','tower','door','en','bounce','pit','high','tower','cave','door','vines','ladder','climb','wall','en'],
  ['en','spikes','door','climb','wall','ladder','spikes','cave','pit','door','high','bounce','wall','vines','boxes'],
@@ -379,6 +379,7 @@ function buildArea(i){
    for(const[a,b,w]of[[40,70,110],[200,140,100],[360,210,100],[520,280,120],[720,280,110],[900,280,110],[1080,280,150]]){L.plats.push({x:x+a,y:GY-b,w});coinArc(L,x+a+20,GY-b-34,x+a+w-20,GY-b-34,0,3);}
    coinArc(L,x+655,GY-300,x+705,GY-300,30,3);coinArc(L,x+845,GY-300,x+885,GY-300,30,3);coinArc(L,x+1025,GY-300,x+1065,GY-300,30,3);
    chest(x+1200,GY-280,'high');L.picks.push({k:'vida',x:x+1120,y:GY-336});en(x+260,x+1220,3);x+=1300;}
+  else if(sg==='granero'){L.holes.push({x:x+220,tipo:'tesoro',cave:null});coinArc(L,x+60,GY-40,x+160,GY-40,30,3);x+=440;} // granero dorado con candado (abre con la Llave dorada)
   else if(sg==='pajar'){ // pila de cajas que tapa un pozo secreto (se ve solo al romperlas)
    L.holes.push({x:x+200,tipo:'secreto',cave:null});box(x+172,GY,2,'crate');box(x+228,GY,2,'crate');box(x+200,GY-104,1,'crate');en(x+300,x+400,1);x+=440;}
   else if(sg==='granjero'){ // portal secreto en una cornisa alta: adentro espera el Granjero Zombi (enemigo secundario)
@@ -699,7 +700,7 @@ function updPlayer(dt){
  if(tramp&&P.vy===-560&&P.y>=GY-1){P.vy=-1010;tramp.sq=1;SFX.boing();fx(P.x,P.y-10,'#ffd23f',10,200);}
  const fallV=P.vy,wasOn=P.on;
  P.vy+=GRAV*dt;if(P.vy>900)P.vy=900;
- P.x+=P.vx*dt;const lo=L.locked?L.arenaX+20:(L.boss&&L.bossDead&&P.x>L.arenaX?L.arenaX+20:20),hi=L.locked||(!L.inside&&P.x>L.arenaX)?L.arenaX+W-20:L.w-20;P.x=clamp(P.x,lo,hi);
+ P.x+=P.vx*dt;const lo=L.locked?L.arenaX+20:20,hi=L.locked||(!L.inside&&P.x>L.arenaX)?L.arenaX+W-20:L.w-20;P.x=clamp(P.x,lo,hi);
  for(const b of L.boxes){if(P.y>b.y-b.h+6&&P.y-(P.crouch?46:82)<b.y&&Math.abs(P.x-b.x)<b.w/2+15){P.x=P.x<b.x?b.x-b.w/2-15:b.x+b.w/2+15;P.vx=0;}}
  if(P.on&&P.y>=GY-1)for(const sp of L.spikes)if(Math.abs(P.x-sp.x)<sp.w/2-8){hurt(10+L.i*2,P.x+P.face);P.vy=-380;}
  const ny=P.y+P.vy*dt;
@@ -714,20 +715,23 @@ function updPlayer(dt){
   else{const bx=P.face>0?P.x-14:P.x-wp.range,by=P.y-(P.crouch?52:88);SFX.whiff();P.vx+=P.face*60;meleeHit(bx,by,wp.range+14,P.crouch?52:88,wp.dmg);}}
  if(press.ab){if(hero.ab==='fire'){if(P.abcd<=0&&P.hurtT<=0){P.abcd=.5;P.atkT=P.atkD=.25;P.swing='fire';L.proj.push({x:P.x+P.face*34,y:P.y-(P.crouch?30:56),vx:P.face*520,vy:0,r:11,dmg:22,from:'p',life:1.1,kind:'fire'});beep(240,.18,'sawtooth');}}
   else say(hero.ab==='double'?'Tu habilidad es pasiva: salta otra vez en el aire':'Tu habilidad: pulsa W junto a una escalera');}
+ // portales: entrar al tocarlos (también en el aire). Tras salir, hay que alejarse para volver a entrar.
+ if(!L.inside&&!L.locked)for(const h of L.holes||[]){if(h.tipo!=='portal'&&h.tipo!=='tesoro')continue;const cy=(h.y||GY)-(h.tipo==='portal'?58:70),toca=Math.abs(P.x-h.x)<30&&P.y>cy-30&&P.y-82<cy+40;
+  if(!toca){h.bloq=false;continue;}if(!h.bloq){if(h.tipo==='tesoro'&&!(h.rise>=1)){h.bloq=true;if(!prog.llave[L.i]){say('Algo dorado vibra bajo la tierra…',3.5);tone(220,now(),.6,'sine',.04,180);}continue;}h.bloq=true;P.on=true;P.y=h.y||GY;press.use=true;}}
  // interactuar
  if(press.use&&P.on){
   if(L.inside){if(Math.abs(P.x-L.exit.x)<50&&L.portalJefe&&!L.vencido){if(toastT<=0)say('¡El portal está sellado! Vence al Granjero');}
-   else if(Math.abs(P.x-L.exit.x)<50){const d=L.door;L=outer;P.x=d.x;P.y=d.y||GY;P.on=true;cam=clamp(P.x-W*.4,0,L.w-W);if(d.cave){banner='De vuelta a la superficie';bannerT=1.6;SFX.door();}}
+   else if(Math.abs(P.x-L.exit.x)<50){const d=L.door;d.bloq=true;L=outer;P.x=d.x;P.y=d.y||GY;P.on=true;P.vy=0;cam=clamp(P.x-W*.4,0,L.w-W);if(d.cave){banner='De vuelta a la superficie';bannerT=1.6;SFX.door();}}
    else if(L.cave){if(Math.abs(P.x-L.chest.x)<60&&!L.chest.open&&give(L.chest.loot)){L.chest.open=true;SFX.item();fx(L.chest.x,GY-40,'#ffd23f',20,260);}}
    else if(Math.abs(P.x-L.chest.x)<60&&!L.chest.open&&L.frenzy&&!L.frenzy.done){say('¡Acaba con la horda primero!');}
    else if(Math.abs(P.x-L.chest.x)<60&&!L.chest.open){const room=L;room.pz=room.pz||['simon','orden','pares'][puzzleN++%3];openPuzzle(()=>{room.chest.open=true;room.door.done=true;give(room.door.loot);fx(room.chest.x,GY-40,'#ffd23f',20,260);},room.pz);}}
-  else{const ho=L.holes&&L.holes.find(h=>Math.abs(P.x-h.x)<44&&Math.abs(P.y-(h.y||GY))<12&&!tapado(h));if(ho&&!L.locked){ho.cave=ho.cave||buildCave(outer.i,ho);L=ho.cave;P.x=130;P.y=GY;P.vx=P.vy=0;cam=0;banner='Cueva secreta';bannerT=2;SFX.door();fx(P.x,GY-40,'#8a6a4a',14,160);return;}
+  else{const ho=L.holes&&L.holes.find(h=>Math.abs(P.x-h.x)<44&&Math.abs(P.y-(h.y||GY))<(h.tipo==='portal'?60:12)&&!tapado(h)&&!(h.tipo==='tesoro'&&!(h.rise>=1)));if(ho&&!L.locked){ho.cave=ho.cave||buildCave(outer.i,ho);L=ho.cave;P.x=130;P.y=GY;P.vx=P.vy=0;cam=0;banner={portal:'¡Corral maldito!',secreto:'Sótano del pajar',tesoro:'¡Granero dorado!'}[ho.tipo]||'Cueva secreta';bannerT=2;SFX.door();fx(P.x,GY-40,'#8a6a4a',14,160);return;}
    const d=L.doors.find(d=>Math.abs(P.x-d.x)<42);if(d&&!L.locked){L=buildRoom(outer.i,d);P.x=130;P.y=GY;P.vx=0;cam=0;farX=130;banner=d.done?'Edificio despejado':'¡MODO FRENÉTICO!';bannerT=2.2;SFX.door();if(!d.done){shake=.5;SFX.alarm();}}}}
  // cofres exteriores
  for(const c of L.crates){if(c.open)continue;if(Math.abs(P.x-c.x)<30&&Math.abs(P.y-c.y)<20){if(c.vines){if(toastT<=0)say('Zarzas espinosas: solo el fuego las quema');}else{if(give(c.loot)){c.open=true;fx(c.x,c.y-20,'#ffd23f',14,220);}}}}
  for(const k of L.picks){if(!k.got&&Math.abs(P.x-k.x)<26&&Math.abs(P.y-40-k.y)<50){k.got=true;
   if(k.k==='vida'){if(lives<9)lives++;banner='¡VIDA EXTRA!';bannerT=2;SFX.win();fx(k.x,k.y,'#ffd23f',22,240);}
-  else if(k.k==='llave'){prog.llave[L.i]=true;banner='¡LLAVE DORADA!';bannerT=2.4;say('Vence al jefe del área para usarla…',3.5);SFX.item();fx(k.x,k.y,'#ffd23f',24,260);}
+  else if(k.k==='llave'){prog.llave[L.i]=true;banner='¡LLAVE DORADA!';bannerT=2.4;say('La llave vibra… sigue la flecha dorada',4);SFX.item();fx(k.x,k.y,'#ffd23f',24,260);}
   else{P.hp=Math.min(P.max,P.hp+15);SFX.heart();fx(k.x,k.y,'#ff4d6d',6,120);}}}
  for(const c of L.coins||[]){if(!c.got&&Math.abs(P.x-c.x)<24&&Math.abs(P.y-41-c.y)<48){c.got=true;if(!DEMO){score+=10;coinsN++;addEn(1);if(coinsN%100===0&&lives<9){lives++;banner='¡100 MONEDAS! +1 VIDA';bannerT=2.2;SFX.win();}}tone(988,now(),.06,'square',.03);tone(1319,now()+.05,.1,'square',.03);fx(c.x,c.y,'#ffd23f',4,90);}}
  for(const b of L.brains||[]){if(!b.got&&!DEMO&&Math.abs(P.x-b.x)<32&&Math.abs(P.y-45-b.y)<56){b.got=true;prog.sec[L.i].add(b.id);SFX.item();puntos(500,b.x,b.y);fx(b.x,b.y,'#ffd23f',26,300);shake=.25;const n=prog.sec[L.i].size;
@@ -746,13 +750,16 @@ function dmgEnemy(e,d,dir,melee){e.hp-=d;addEn(Math.min(d,e.hp+d)*.5);e.flash=.2
 function dmgBoss(d){const b=L.boss;if(!b||b.st==='sleep'||b.st==='morph'||b.st==='dead')return false;b.hp-=d;addEn(d*.3);b.flash=.14;fx(b.x,b.y-b.h*.6,'#fff',6,200);{const ml=P.atkT>0&&P.atkT>P.atkD-.05&&(!P.eq||ITEMS[P.eq].type==='melee')&&P.swing!=='fire';impact(b.x-b.face*-1*0+(P.x<b.x?-1:1)*b.w*.3,b.y-b.h*.55,d,ml);hitSfx(ml?Math.max(d,20):5);}
  if(b.phase===2&&b.c.k==='ia'&&P.hp<P.max&&Math.random()<.16)dropBossHeart(b);
  if(b.hp<=0){if(b.c.hp2&&b.phase===1){b.st='morph';b.t=2.4;b.hp=0;shake=.6;banner='¡¡SE ESTÁ DEFORMANDO!!';bannerT=2.4;L.proj=L.proj.filter(p=>p.from==='p');}
-  else{SFX.boom();hitstop=.25;puntos(1000,b.x,b.y-b.h);prog.cleared[L.i]=true;prog.max=Math.max(prog.max,Math.min(4,L.i+1));b.st='dead';b.t=1.6;L.bossDead=true;L.locked=false;L.portal=L.arenaX+W-110;L.proj=[];L.en=L.en.filter(e=>e.x<L.arenaX);shake=.7;fx(b.x,b.y-b.h/2,'#ffd23f',40,360);L.picks.push({k:'heart',x:b.x,y:GY-26},{k:'heart',x:b.x+40,y:GY-26});banner='¡Jefe derrotado! Cruza el portal';bannerT=3;if(prog.llave[L.i]&&!L.holes.some(h=>h.tipo==='tesoro')){L.holes.push({x:L.arenaX+330,tipo:'tesoro',cave:null});setTimeout(()=>say('¡La Llave dorada brilla… algo apareció en la arena!',4),1600);}}}
+  else{SFX.boom();hitstop=.25;puntos(1000,b.x,b.y-b.h);prog.cleared[L.i]=true;prog.max=Math.max(prog.max,Math.min(4,L.i+1));b.st='dead';b.t=1.6;L.bossDead=true;L.locked=false;L.portal=L.arenaX+W-110;L.proj=[];L.en=L.en.filter(e=>e.x<L.arenaX);shake=.7;fx(b.x,b.y-b.h/2,'#ffd23f',40,360);L.picks.push({k:'heart',x:b.x,y:GY-26},{k:'heart',x:b.x+40,y:GY-26});banner='¡Jefe derrotado! Cruza el portal';bannerT=3;}}
  return true;}
 function dmgBox(b,d){b.hp-=d;b.flash=.15;SFX.wood();impact(b.x,b.y-b.h/2-12,d,true);if(b.hp>0)return;b.dead=true;puntos(b.kind==='barrelR'?80:40,b.x,b.y-36);noise(.2,900,.5,'bandpass',.7);
  for(let k=0;k<b.n;k++)fx(b.x,b.y-26-k*52-12,b.kind==='barrelR'?'#e5203a':'#b8742a',12,260);
  if(b.kind==='barrelR'){SFX.boom();shake=.5;fx(b.x,b.y-40,'#ffb347',26,380);L.fx.push({kind:'burst',x:b.x,y:b.y-40,vx:0,vy:0,t:.3,T:.3,r:70});for(const e of L.en)if(!e.dead&&Math.abs(e.x-b.x)<150&&Math.abs(e.y-b.y)<120)dmgEnemy(e,45,Math.sign(e.x-b.x)||1,true);for(const o of L.boxes)if(!o.dead&&o!==b&&Math.abs(o.x-b.x)<140)o.hp=0,dmgBox(o,1);if(Math.abs(P.x-b.x)<85&&Math.abs(P.y-b.y)<100)hurt(12,b.x);}
  else{const q=Math.random();if(q<.4)L.picks.push({k:'heart',x:b.x,y:b.y-26});}}
 function updWorld(dt){
+ if(!L.inside)for(const h of L.holes||[]){if(h.tipo!=='tesoro'||!prog.llave[L.i])continue;
+  if(!h.rise&&Math.abs(P.x-h.x)<150&&P.on){h.rise=.001;banner='¡EL GRANERO DORADO EMERGE!';bannerT=2.6;SFX.boom();setTimeout(()=>SFX.win(),700);}
+  if(h.rise>0&&h.rise<1){h.rise=Math.min(1,h.rise+dt/2.2);shake=Math.max(shake,.25);if(h.rise>=1){fx(h.x,GY-80,'#ffd23f',40,320);shake=.5;}}}
  if(L.portalJefe){ // el Granjero sale del portal; al vencerlo se abre la salida
   if(L.spawnT>0){L.spawnT-=dt;if(L.spawnT<=.9&&!L.rugio){L.rugio=1;SFX.roar();shake=.5;banner='GRANJERO ZOMBI';bannerT=2.2;}
    if(L.spawnT<=0){const a=L.i,e=mkEnemy('zombie',640,200,900,a,GY),hp=260+a*90;Object.assign(e,{big:1.7,w:e.w*1.7,h:e.h*1.7,hp,max:hp,dmg:16+a*3,spd:88+a*6,jefe:'GRANJERO ZOMBI',llave:true,dir:-1});L.en.push(e);fx(640,GY-80,'#c77dff',40,320);shake=.6;}}
@@ -902,8 +909,8 @@ function drawDoorsEtc(){
   rr(x-28,GY-108,56,94,[8,8,0,0],'#101629');rr(x-23,GY-103,46,89,[6,6,0,0],'#6b4526');circ(x+14,GY-56,4,'#ffd23f');
   rr(x-52,GY-150,104,30,6,'#101629');g.fillStyle=d.done?'#7ed957':'#ffd23f';g.font='800 15px Rubik';g.textAlign='center';g.fillText(d.done?'DESPEJADO':'[E] ENTRAR',x,GY-130);}
  if(L.portalJefe){const sx=640-cam,ab=L.spawnT>0?clamp(1-L.spawnT/1.5,0,1):L.en.some(e=>e.jefe&&!e.dead)?Math.max(0,1-(time%9)):0;
-  if(L.spawnT>0||ab>0){g.save();for(let k=0;k<4;k++){g.strokeStyle=['#c77dff','#ff5ee0','#7fd8ff','#fff'][k];g.lineWidth=5;g.beginPath();g.ellipse(sx,GY-90,(30+k*12)*ab+Math.sin(time*7+k)*3,(80+k*8)*ab,0,0,6.28);g.stroke();}ell(sx,GY-90,28*ab,78*ab,'rgba(20,0,40,.9)');g.restore();}
-  const ex=L.exit.x-cam,o=L.salida;if(o>0){for(let k=0;k<3;k++){g.strokeStyle=['#7fd8ff','#ffd23f','#c77dff'][k];g.lineWidth=5;g.beginPath();g.ellipse(ex,GY-70,(24+k*8)*o+Math.sin(time*5+k)*3,(60+k*6)*o,0,0,6.28);g.stroke();}ell(ex,GY-70,22*o,56*o,'rgba(255,255,255,.7)');}
+  if(L.spawnT>0||ab>0){g.save();for(let k=0;k<4;k++){g.strokeStyle=['#c77dff','#ff5ee0','#7fd8ff','#fff'][k];g.lineWidth=5;g.beginPath();g.ellipse(sx,GY-90,Math.max(1,(30+k*12)*ab+Math.sin(time*7+k)*3*ab),Math.max(1,(80+k*8)*ab),0,0,6.28);g.stroke();}ell(sx,GY-90,Math.max(1,28*ab),Math.max(1,78*ab),'rgba(20,0,40,.9)');g.restore();}
+  const ex=L.exit.x-cam,o=L.salida;if(o>0){for(let k=0;k<3;k++){g.strokeStyle=['#7fd8ff','#ffd23f','#c77dff'][k];g.lineWidth=5;g.beginPath();g.ellipse(ex,GY-70,Math.max(1,(24+k*8)*o+Math.sin(time*5+k)*3*o),Math.max(1,(60+k*6)*o),0,0,6.28);g.stroke();}ell(ex,GY-70,Math.max(1,22*o),Math.max(1,56*o),'rgba(255,255,255,.7)');}
   else{rr(ex-26,GY-128,52,114,[26,26,0,0],'rgba(60,20,90,.6)');}
   tag(ex,GY-150,L.vencido?'[E] SALIR':'SELLADO',L.vencido?'#7fd8ff':'#ff5ee0');}
  else if(L.cave){let x=L.exit.x-cam;g.fillStyle='rgba(255,240,180,.12)';g.beginPath();g.moveTo(x-30,0);g.lineTo(x+30,0);g.lineTo(x+70,GY);g.lineTo(x-70,GY);g.fill();
@@ -930,8 +937,7 @@ function drawExtras(){
    if(vis>0){g.save();g.globalAlpha=vis;for(let k=0;k<3;k++){g.strokeStyle=['#c77dff','#7fd8ff','#ff5ee0'][k];g.lineWidth=4;g.beginPath();g.ellipse(x,y,20+k*7+Math.sin(time*5+k)*2,46+k*5,0,0,6.28);g.stroke();}ell(x,y,18,42,'rgba(30,0,50,.85)');g.restore();
     if(vis>.6)tag(x,y-66,'[E] ENTRAR AL PORTAL','#c77dff');}continue;}
   if(tapado(h)){if(Math.sin(time*2.2+h.x)>.6){g.globalAlpha=.8;g.fillStyle='#fff6c8';g.font='18px Rubik';g.textAlign='center';g.fillText('✦',x+Math.sin(time*3)*20,GY-140-Math.sin(time*2.2+h.x)*10);g.globalAlpha=1;}continue;}
-  if(h.tipo==='tesoro'){const gl=.5+.5*Math.sin(time*4);g.globalAlpha=.35+.25*gl;circ(x,GY-70,80,'#ffd23f');g.globalAlpha=1;rr(x-42,GY-148,84,134,[42,42,0,0],'#8a5a00');rr(x-34,GY-140,68,126,[34,34,0,0],'#ffcf3a');rr(x-26,GY-130,52,116,[26,26,0,0],'#c98a00');circ(x+14,GY-70,5,'#fff3a8');
-   if(Math.abs(P.x-h.x)<160)tag(x,GY-166,prog.tesoro[L.i]?'[E] GRANERO DORADO ✓':'[E] GRANERO DORADO','#ffd23f');continue;}
+  if(h.tipo==='tesoro'){drawGranero(h,x);continue;}
   ell(x,GY-7,62,15,'#4a3320');ell(x,GY-7,52,11,'#05030a');
   g.strokeStyle='#c9914a';g.lineWidth=4;g.beginPath();g.moveTo(x-12,GY-4);g.lineTo(x-12,GY-44);g.moveTo(x+12,GY-4);g.lineTo(x+12,GY-44);g.stroke();for(let y=GY-14;y>GY-44;y-=12){g.beginPath();g.moveTo(x-12,y);g.lineTo(x+12,y);g.stroke();}
   if(Math.sin(time*1.3+h.x)>.8){circ(x-24,GY-7,2.4,'#ffd23f');circ(x-15,GY-7,2.4,'#ffd23f');}
@@ -953,6 +959,16 @@ function drawPremio(k,x,y){g.save();g.globalAlpha=.35+.2*Math.sin(time*6);circ(x
  else{g.translate(x,y);g.rotate(Math.sin(time*2)*.25);g.strokeStyle='#8a5a00';g.lineWidth=7;g.beginPath();g.arc(-8,0,8,0,6.2832);g.moveTo(0,0);g.lineTo(18,0);g.moveTo(12,0);g.lineTo(12,7);g.moveTo(17,0);g.lineTo(17,6);g.stroke();
   g.strokeStyle='#ffd23f';g.lineWidth=4;g.beginPath();g.arc(-8,0,8,0,6.2832);g.moveTo(0,0);g.lineTo(18,0);g.moveTo(12,0);g.lineTo(12,7);g.moveTo(17,0);g.lineTo(17,6);g.stroke();}
  g.restore();}
+// Granero dorado oculto: antes de la llave solo hay un anillo de flores doradas; con la llave, emerge del suelo.
+function drawGranero(h,x){const r=h.rise||0;
+ if(r<1){for(let k=0;k<9;k++){const a=k/9*6.2832+time*.3,fx=x+Math.cos(a)*46,fy=GY-9+Math.sin(a)*8,br=.5+.5*Math.sin(time*3+k*2);g.globalAlpha=.6+.4*br;circ(fx,fy,4,'#ffd23f');circ(fx,fy,1.8,'#fff3a8');}g.globalAlpha=1;
+  if(Math.sin(time*1.7+h.x)>.85){g.globalAlpha=.8;g.fillStyle='#fff6c8';g.font='16px Rubik';g.textAlign='center';g.fillText('✦',x+Math.sin(time*4)*30,GY-30);g.globalAlpha=1;}}
+ if(r<=0)return;const sh=r<1?Math.sin(time*60)*3*(1-r):0,top=GY-14-148*r;
+ if(r<1){g.save();g.globalCompositeOperation='lighter';for(let k=0;k<5;k++){const bx=x+(k-2)*22+Math.sin(time*3+k)*6;g.globalAlpha=.25*(1-Math.abs(k-2)/3);const gr=g.createLinearGradient(0,GY,0,0);gr.addColorStop(0,'#ffd23f');gr.addColorStop(1,'rgba(255,210,63,0)');g.fillStyle=gr;g.fillRect(bx-8,0,16,GY);}g.restore();
+  for(let k=0;k<3;k++)L.fx.push({x:h.x+(Math.random()-.5)*110,y:GY-10,vx:(Math.random()-.5)*120,vy:-120-Math.random()*200,t:.5,col:Math.random()<.5?'#8a5a2b':'#ffd23f',r:3+Math.random()*3});}
+ g.save();g.beginPath();g.rect(x-200,0,400,GY-12);g.clip();g.translate(sh,0);const gl=.5+.5*Math.sin(time*4);g.globalAlpha=(.35+.25*gl)*r;circ(x,top+78,80,'#ffd23f');g.globalAlpha=1;
+ rr(x-42,top,84,134,[42,42,0,0],'#8a5a00');rr(x-34,top+8,68,126,[34,34,0,0],'#ffcf3a');rr(x-26,top+18,52,116,[26,26,0,0],'#c98a00');circ(x+14,top+78,5,'#fff3a8');g.restore();
+ if(r>=1&&Math.abs(P.x-h.x)<160)tag(x,GY-166,prog.tesoro[L.i]?'[E] GRANERO DORADO ✓':'[E] GRANERO DORADO','#ffd23f');}
 function drawChest(x,y,open,vines){shadow(x,y,30);drawM(open?'chestOpen':'chest',x,y+3,.74);
  if(vines){g.strokeStyle='#2f7a3a';g.lineWidth=5;for(let k=0;k<4;k++){g.beginPath();g.moveTo(x-34+k*22,y);g.bezierCurveTo(x-50+k*26,y-30,x-10+k*14,y-40,x-30+k*20,y-64);g.stroke();}g.fillStyle='#e63946';for(let k=0;k<6;k++)tri(x-30+k*12,y-18-k%3*16,x-25+k*12,y-28-k%3*16,x-20+k*12,y-18-k%3*16,'#b6e36b');}}
 function drawEnemy(e){const x=e.x-cam,y=e.y,bob=Math.sin(e.ph*8)*2;shadow(x,e.gy-14,e.w*.55);{const S=SPR[e.skin];if(S){const A=S.A,f=e.atk>0?A.atk[Math.min(A.atk.length-1,Math.floor((1-e.atk/S.dur)*A.atk.length))]:e.flash>0?A.hurt[0]:S.hop?(e.y<e.gy?(e.vy<0?A.jump[1]:A.jump[2]):e.tm<.22?A.jump[0]:A.walk[Math.floor(e.ph*2.5)%4]):A.walk[Math.floor(e.ph*8)%4];{const sq=e.stun>0?1+e.stun*.6:1;g.save();g.translate(x,y-12);g.scale(sq,1/sq);const esc=S.sc*(e.big||1);drawSpr(S.img,f,0,0,e.dir,esc,1,S.cw,S.ch,S.cols);if(e.flash>.1){g.globalCompositeOperation='lighter';drawSpr(S.img,f,0,0,e.dir,esc,.75,S.cw,S.ch,S.cols);g.globalCompositeOperation='source-over';}g.restore();}
@@ -1151,6 +1167,8 @@ function drawHUD(){
   const bx2=sx2(L.arenaX+400);tri(bx2-6,52,bx2+6,52,bx2,40,L.bossDead?'#7ed957':'#ff3c5a');
   circ(sx2(P.x),48.5,5,'#101629');circ(sx2(P.x),48.5,3.5,hero.col);}
  if(!L.inside||L.cave){const n=prog.sec[L.i].size,t='🧠 '+n+'/3';g.font='800 13px Rubik';g.textAlign='right';const tw=g.measureText(t).width;rr(W-104-tw,64,tw+18,24,9,'rgba(8,11,24,.86)');g.fillStyle=n>=3?'#7ed957':'#ffd23f';g.fillText(t,W-95,81);}
+ if(!L.inside&&prog.llave[L.i]){const h=(L.holes||[]).find(q=>q.tipo==='tesoro'&&!(q.rise>=1));if(h){const dx=h.x-P.x,sx=h.x-cam;if(sx<30||sx>W-30){const izq=dx<0,ax=izq?34:W-34,ay=H/2+Math.sin(time*5)*4,p=.6+.4*Math.sin(time*6);
+  g.save();g.translate(ax,ay);g.scale(izq?-1:1,1);g.globalAlpha=p;tri(-14,-18,-14,18,16,0,'#ffd23f');g.restore();g.globalAlpha=1;g.font='800 12px Rubik';g.textAlign='center';g.fillStyle='#ffd23f';g.fillText('🗝 '+Math.round(Math.abs(dx)/10)+' m',ax+(izq?18:-18),ay+34);}}}
  const F=L.frenzy;if(F&&!F.done){const fp=F.kills/F.need;rr(W/2-170,H-52,340,34,12,'rgba(40,0,10,.88)');rr(W/2-164,H-30,328*fp,7,3,'#ff3c5a');g.textAlign='center';g.font='800 14px Rubik';g.fillStyle=Math.sin(time*12)>0?'#ff3c5a':'#ffd23f';g.fillText('MODO FRENÉTICO · '+F.kills+'/'+F.need+' zombis',W/2,H-35);}
  const b=L.boss;if(b&&L.locked&&b.st!=='dead'){rr(180,H-44,600,26,10,'rgba(10,14,30,.85)');rr(184,H-40,592*clamp(b.hp/b.max,0,1),18,7,b.phase===2?'#ff5ee0':'#e63946');g.textAlign='center';g.fillStyle='#fff';g.font='800 13px Rubik';g.fillText((b.phase===2&&b.c.n2?b.c.n2:b.c.n)+(b.c.hp2?' · FASE '+b.phase+'/2':''),W/2,H-27);}
  if(toastT>0){g.font='600 15px Rubik';g.textAlign='center';const w=g.measureText(toast).width+36;rr(W/2-w/2,84,w,34,17,'rgba(10,14,30,.85)');g.fillStyle='#ffd23f';g.fillText(toast,W/2,106);}
